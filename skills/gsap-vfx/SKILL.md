@@ -27,100 +27,112 @@ Full cyberpunk glitch system: 1-second burst every 4 seconds with chromatic aber
 ### Timeline structure
 
 ```js
-const glitchTl = gsap.timeline({ repeat: -1, repeatDelay: 4, delay: 4, paused: true })
+const tl = gsap.timeline({ repeat: -1, repeatDelay: 4, delay: 4 })
 ```
+
+Auto-plays immediately — no `paused: true`. The `delay: 4` gives the page time to load before the first burst.
 
 ### RGB chromatic aberration
 
 Two overlay layers clipped identically to the text, offset in opposite directions.
 
 ```js
-glitchTl.to(redLayer, { x: -4, y: -2, autoAlpha: 0.8, duration: 0.06, ease: 'steps(1)', force3D: true }, 0)
-glitchTl.to(blueLayer, { x: 4, y: 1, autoAlpha: 0.8, duration: 0.06, ease: 'steps(1)', force3D: true }, 0)
+tl.to(rL, { autoAlpha: 0.8, x: -4, y: -2, skewX: 2, duration: 0.05, ease: 'steps(1)' }, 0)
+tl.to(bL, { autoAlpha: 0.7, x: 4, y: 1, skewX: -1.5, duration: 0.05, ease: 'steps(1)' }, 0)
 ```
 
-`ease: 'steps(1)'` creates instant frame-snapping — no interpolation between keyframes.
+`ease: 'steps(1)'` creates instant frame-snapping — no interpolation between keyframes. Note asymmetric autoAlpha (0.8 vs 0.7) and opposing skewX for a more organic look.
 
 ### Per-word scramble
 
 ```js
-words.forEach((word, i) => {
-  glitchTl.to(word, {
-    scrambleText: { text: '{original}', chars: '!@#$%^&*', speed: 0.6 },
-    duration: 0.6,
+words.forEach((w, i) => {
+  tl.to(w, {
+    duration: 0.8,
+    ease: 'none',
+    overwrite: false,
+    scrambleText: { text: w.textContent, chars: CHARS, revealDelay: 0.15, speed: 0.5 },
   }, i * 0.05) // staggered starts
 })
 ```
 
-### Jitter keyframes (applyJitter pattern)
+`overwrite: false` prevents scramble tweens from killing each other when words overlap in time.
 
-12 keyframes at 0.06s intervals with random transforms and clip-path insets.
+### Jitter (continuous onUpdate pattern)
+
+A single empty-target tween that calls `applyJitter` every frame for 0.72 seconds — NOT discrete keyframes.
 
 ```js
-function applyJitter(el) {
-  gsap.set(el, {
-    skewX: gsap.utils.random(-3, 3),
-    x: gsap.utils.random(-6, 6),
-    clipPath: `inset(${gsap.utils.random(0, 40)}% 0 ${gsap.utils.random(0, 40)}% 0)`,
-  })
+const rnd = (min, max) => gsap.utils.random(min, max)
+const clipRnd = (max) => `inset(${rnd(0, max)}% 0 ${rnd(0, max)}% 0)`
+
+function applyJitter() {
+  gsap.set(el, { x: rnd(-4, 4), y: rnd(-2, 2), skewX: rnd(-3, 3), clipPath: clipRnd(40) })
+  gsap.set(rL, { x: rnd(-8, -2), clipPath: clipRnd(60) })
+  gsap.set(bL, { x: rnd(2, 8), clipPath: clipRnd(60) })
 }
 
-for (let i = 0; i < 12; i++) {
-  glitchTl.call(applyJitter, [textEl], i * 0.06)
-}
+tl.to({}, { duration: 0.72, onUpdate: applyJitter }, 0)
 ```
+
+The empty `{}` target means GSAP runs the tween purely for its `onUpdate` callback — fresh random values every rendered frame. RGB layers get wider jitter ranges than the heading.
 
 ### Noise bars
 
-4 horizontal bars at different vertical positions (scaleX 0 → 1 → 0).
+4 horizontal bars — each snaps on then snaps off using two separate `tl.to()` calls with `steps(1)`.
 
 ```js
-const barPositions = [10, 35, 60, 85] // % from top
-barPositions.forEach((top, i) => {
-  glitchTl.fromTo(bars[i],
-    { scaleX: 0, autoAlpha: 0.6 },
-    { scaleX: 1, autoAlpha: 0, duration: 0.3, ease: 'power2.in', force3D: true },
-    i * 0.08
-  )
+noiseBars.forEach((bar, i) => {
+  tl.to(bar, { scaleX: 1, duration: 0.03, ease: 'steps(1)' }, i * 0.06)
+  tl.to(bar, { scaleX: 0, duration: 0.03, ease: 'steps(1)' }, i * 0.06 + 0.12)
 })
 ```
 
+Two discrete tweens per bar (snap on, snap off) staggered at `i * 0.06` intervals. Bars start from `scaleX: 0` (set in initial state).
+
 ### GPU lifecycle
 
-Promote at burst start, release at burst end.
+Promote at burst start (0s), release after full resolve (1s).
 
 ```js
-function promoteGPU(els) {
-  els.forEach(el => { el.style.willChange = 'transform, opacity, clip-path' })
-}
-function releaseGPU(els) {
-  els.forEach(el => { el.style.willChange = 'auto' })
-}
+const glitchTargets = [el, rL, bL]
+function promoteGPU() { glitchTargets.forEach(t => { t.style.willChange = 'transform, opacity, clip-path' }) }
+function releaseGPU() { glitchTargets.forEach(t => { t.style.willChange = 'auto' }) }
 
-glitchTl.call(promoteGPU, [allGlitchEls], 0)
-glitchTl.call(releaseGPU, [allGlitchEls], 0.9)
+tl.call(promoteGPU, null, 0)
+tl.call(releaseGPU, null, 1)  // 1s, not 0.9s — after resolve tweens complete
 ```
 
 ### Badge hue-rotate flash (synced with burst)
 
+Two separate tweens: snap the filter on at 0s, resolve it at 0.9s. No yoyo/repeat.
+
 ```js
-glitchTl.to(badge, {
-  filter: 'hue-rotate(90deg)', duration: 0.1, yoyo: true, repeat: 3, ease: 'steps(1)',
-}, 0)
+const RED_FILTER = 'hue-rotate(150deg) saturate(1.5) brightness(1.2)'
+
+tl.to(badge, { filter: RED_FILTER, duration: 0.05 }, 0)
+tl.to(badge, { filter: 'none', duration: 0.1 }, 0.9)
 ```
 
 ### CLS-safe wrapper height + cleanup at 0.9s
 
 ```js
 // Lock height to prevent layout shift
-onMounted(() => {
-  wrapper.value.style.minHeight = `${wrapper.value.offsetHeight}px`
-})
+const wrapper = el.closest('.glitch-wrapper')
+if (wrapper) wrapper.style.height = `${wrapper.offsetHeight}px`
 
-// All effects resolve with 0.1s fade to clean state
-glitchTl.to([redLayer, blueLayer], { x: 0, y: 0, autoAlpha: 0, duration: 0.1 }, 0.9)
-glitchTl.set(textEl, { skewX: 0, x: 0, clipPath: 'inset(0 0 0 0)' }, 0.9)
+// clearJitter resets all transforms
+function clearJitter() {
+  gsap.set([el, rL, bL], { x: 0, y: 0, skewX: 0, clipPath: 'none' })
+}
+
+// Resolve at 0.9s — clipPath uses 'none' not 'inset(0 0 0 0)', overwrite: 'auto' kills stale tweens
+tl.call(clearJitter, null, 0.9)
+tl.to(rL, { autoAlpha: 0, x: 0, y: 0, skewX: 0, clipPath: 'none', duration: 0.1, overwrite: 'auto' }, 0.9)
+tl.to(bL, { autoAlpha: 0, x: 0, y: 0, skewX: 0, clipPath: 'none', duration: 0.1, overwrite: 'auto' }, 0.9)
 ```
+
+`overwrite: 'auto'` on the resolve tweens ensures they kill any still-running jitter sets on the RGB layers.
 
 ---
 

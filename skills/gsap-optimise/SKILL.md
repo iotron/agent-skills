@@ -4,7 +4,7 @@ description: >
   GSAP performance optimisation for Vue 3 / Nuxt 3 and React. Apply after building animations
   (gsap-animate) to audit and improve performance. Covers: GPU acceleration (force3D, transforms
   vs layout properties), will-change lifecycle (set on start, release onComplete), high-frequency
-  tools (gsap.quickTo 50-250% faster, gsap.quickSetter for per-frame piping, overwrite: 'auto'),
+  tools (gsap.quickTo significantly faster for repeated updates, gsap.quickSetter for per-frame piping, overwrite: 'auto'),
   lazy rendering internals, lazy initialisation pattern, timeline reuse, ticker/lagSmoothing tuning,
   gsap.utils.pipe, anti-patterns compilation, and component audit checklist.
   Triggers: GSAP performance, animation optimise, animation slow, jank, 60fps, memory leak,
@@ -48,12 +48,17 @@ gsap.to(img, { scale: 1, force3D: false }) // crisp image
 
 ---
 
-## 2. will-change Lifecycle
+## 2. will-change
 
-Set on interaction start, **release** when animation completes. Never permanent in CSS.
+For **one-shot animations** (scroll reveals, page load), `will-change: transform` in CSS is fine — the official GSAP performance skill recommends it.
+
+For **interactive/repeated animations** (mousemove, hover), manage the lifecycle in JS — set on interaction start, release when done. This avoids permanent GPU memory cost for elements that aren't always animating.
 
 ```js
-// GOOD — lifecycle managed
+// OK — CSS will-change for elements that always animate (scroll-driven, looping)
+.parallax-layer { will-change: transform; }
+
+// BETTER for interactive — JS lifecycle
 self.add('applyEffect', (el) => {
   el.style.willChange = 'transform'
   gsap.to(el, { scale: 1.03, ...HOVER_IN })
@@ -80,7 +85,7 @@ Kills in-progress tweens on the same target/properties. **Required** on all rapi
 gsap.to(el, { x: pos, overwrite: 'auto', duration: 0.3 })
 ```
 
-### gsap.quickTo() — animated updates (50-250% faster)
+### gsap.quickTo() — animated updates (significantly faster for repeated updates)
 
 Pre-creates a reusable tween function. Ideal for cursor followers, parallax.
 
@@ -93,7 +98,7 @@ el.addEventListener('mousemove', (e) => { xTo(e.clientX); yTo(e.clientY) })
 
 ### gsap.quickSetter() — immediate updates (no animation)
 
-Skips unit conversion, relative values, parsing — raw speed for per-frame sets.
+Bypasses full tween creation overhead — sets values directly for maximum per-frame speed.
 
 ```js
 const setX = gsap.quickSetter('#el', 'x', 'px')
@@ -107,9 +112,9 @@ setX(mouseX); setY(mouseY)
 | Method | Animates? | Speed | Use case |
 |--------|-----------|-------|----------|
 | `gsap.to()` | Yes | Normal | General animation |
-| `gsap.quickTo()` | Yes | 50-250% faster | Repeated cursor/scroll-driven |
+| `gsap.quickTo()` | Yes | Fast (reuses single tween) | Repeated cursor/scroll-driven |
 | `gsap.quickSetter()` | No (instant) | Fastest | Per-frame direct value piping |
-| `gsap.set()` | No (instant) | Normal | General one-off sets |
+| `gsap.set()` | No (instant) | Fast | General one-off sets |
 
 ### gsap.utils.pipe() — chain transformations
 
@@ -130,6 +135,20 @@ GSAP defers first-render writes to the end of the current tick — avoids read/w
 
 - Do **not** set `lazy: false` unless you need the write immediately visible in the same tick.
 - Zero-duration tweens (`duration: 0`) have `lazy: false` by default.
+
+### immediateRender on stacked from()/fromTo()
+
+When multiple `from()` or `fromTo()` tweens target the same property of the same element, set `immediateRender: false` on the later ones. Otherwise the second tween's start state overwrites the first tween's end state before it runs.
+
+```js
+// BAD — second from() immediately overrides the first
+gsap.from(el, { x: -100 })
+gsap.from(el, { y: -100 }) // x snaps to current, first tween invisible
+
+// GOOD — later tween defers initial render
+gsap.from(el, { x: -100 })
+gsap.from(el, { y: -100, immediateRender: false })
+```
 
 ---
 
@@ -178,10 +197,10 @@ const show = () => gsap.timeline().to(el, { autoAlpha: 1 }).to(el, { y: -20 })
 ## 7. Ticker & lagSmoothing
 
 ```js
-gsap.ticker.lagSmoothing(500, 33) // default: if >500ms gap, act as 33ms
+gsap.ticker.lagSmoothing(500, 33) // example: if >500ms gap, act as 33ms
 gsap.ticker.lagSmoothing(0)       // disable for frame-perfect (video sync)
 
-gsap.config({ autoSleep: 120 })   // frames before ticker sleeps (saves battery)
+gsap.config({ autoSleep: 120 })   // custom value — GSAP default is 60. Frames before ticker sleeps (saves battery)
 ```
 
 ---
@@ -204,16 +223,15 @@ gsap.to(el, { transformPerspective: 900, rotationX: x })
 // BAD: manual scrollTriggers[] array (context collects them)
 const scrollTriggers = []
 
-// BAD: permanent will-change in CSS
-.card { will-change: transform; }
+// BAD: permanent will-change on interactive elements (use JS lifecycle instead)
+.hover-card { will-change: transform; } // OK for scroll-driven, BAD for hover/mousemove
 
 // BAD: new timeline every call
 const show = () => gsap.timeline().to(el, { ... })
 
-// BAD: individual ScrollTrigger per element (use batch)
-document.querySelectorAll('.item').forEach(item => {
-  gsap.to(item, { scrollTrigger: { trigger: item }, ... })
-})
+// CONSIDER: batch() instead of per-element ScrollTrigger for large grids (50+ items)
+// Per-element ScrollTrigger is fine for small sets — batch() is an optimization, not a requirement
+ScrollTrigger.batch('.grid-item', { onEnter: (batch) => gsap.to(batch, { ... }) })
 
 // BAD: no reduced motion check
 onMounted(() => gsap.from(el, { y: 100, duration: 1 }))
@@ -237,7 +255,7 @@ Apply to every GSAP-using component:
 **GPU & Rendering**
 - [ ] Only transform/opacity properties animated (no left/top/width/height)
 - [ ] `force3D: true` on repeatedly animated elements; `"auto"` elsewhere
-- [ ] `will-change` set on interaction start, released in `onComplete`
+- [ ] `will-change` managed: CSS for scroll-driven, JS lifecycle for interactive
 - [ ] `autoAlpha` used instead of `opacity` for show/hide
 - [ ] `transformPerspective` set once via `gsap.set()`, not per-frame
 
@@ -247,7 +265,7 @@ Apply to every GSAP-using component:
 - [ ] `quickSetter()` for per-frame direct value piping
 
 **ScrollTrigger**
-- [ ] `ScrollTrigger.batch()` for many similar elements
+- [ ] `ScrollTrigger.batch()` for large grids (50+ similar elements)
 - [ ] `once: true` on one-shot triggers
 - [ ] `invalidateOnRefresh: true` on responsive layouts
 - [ ] `scrub` uses smoothing number (e.g. `0.5`) not bare `true` when possible

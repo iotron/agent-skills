@@ -128,63 +128,90 @@ const ctx = gsap.context(() => {
 
 ## 3. Circuit Tree Pattern (Triple-Layer Animation)
 
-Three synced 10s timelines via `.add()`. SVG: 209 elements (128 paths + 81 circles).
+Three synced 10s timelines via `.add()` on a master with `repeatRefresh: true`. All layers target the same `allEls` array (all SVG shape elements). No stagger on fade or wave layers — elements animate in unison; only colorAnime uses stagger.
 
 ```js
-const ctx = gsap.context(() => {
-  const master = gsap.timeline({ repeat: -1 })
-  master
-    .add(createFadeAnime(allEls), 0)
-    .add(createWaveAnime(openPaths), 0)
-    .add(createColorAnime(allEls), 0)
-}, containerRef.value)
+const COLORS = '#02f4c8|#41bbf6|#2dd4bf|#34d399|#06b6d4|#0ea5e9'
+const randomColorStr = `random([${COLORS.split('|').map(c => `"${c}"`).join(',')}])`
+
+const allEls = [...circuitWrap.value.querySelectorAll('polygon, path, rect, line, circle, polyline, ellipse')]
+allEls.forEach(el => { el.style.cssText = 'fill:transparent;stroke-linecap:round;stroke-linejoin:round' })
+
+gsap.set(allEls, { stroke: randomColorStr, strokeWidth: '0.3rem', autoAlpha: 0 })
+
+gsap.timeline({ repeat: -1, repeatRefresh: true })
+  .add(fadeAnime(), 0)
+  .add(waveAnime(), 0)
+  .add(colorAnime(), 3)
 ```
 
-### Layer 1: fadeAnime — breathing pulse
+`repeatRefresh: true` lives on the **master** timeline so `randomColorStr` re-rolls every cycle.
+
+### Layer 1: fadeAnime — breathing envelope (10s)
+
+1s fade-in, 8s breathing glow (0.3 to 0.6, yoyo x3), 1s fade-out. Uses `fromTo()` for the initial ramp, then two `.to()` calls. No stagger.
 
 ```js
-function createFadeAnime(els) {
-  return gsap.timeline()
-    .set(els, { autoAlpha: 0 })
-    .to(els, { autoAlpha: 0.3, duration: 3, stagger: { each: 0.03, from: 'random' } })
-    .to(els, { autoAlpha: 0.6, duration: 4, yoyo: true, repeat: 3,
-      stagger: { each: 0.03, from: 'random' } })
+function fadeAnime() {
+  const tl = gsap.timeline()
+  tl.fromTo(allEls, { autoAlpha: 0 }, { autoAlpha: 0.3, duration: 1, ease: 'sine.in' })
+    .to(allEls, { autoAlpha: 0.6, duration: 2, ease: 'sine.inOut', yoyo: true, repeat: 3 })
+    .to(allEls, { autoAlpha: 0, duration: 1, ease: 'sine.out' })
+  return tl
 }
 ```
 
-### Layer 2: waveAnime — DrawSVG 3-phase
+### Layer 2: waveAnime — DrawSVG 3-phase (10s)
+
+Three sequential tweens: build (3s), peak (4s), collapse (3s). No stagger. First tween also sets `stroke: randomColorStr` for fresh colour each cycle. Final tween shrinks `strokeWidth` to `0.2rem` and draws to `'100% 100%'` (fully collapsed).
 
 ```js
-function createWaveAnime(openPaths) {
-  return gsap.timeline()
-    // Build 0-3s
-    .fromTo(openPaths, { drawSVG: '0%' },
-      { drawSVG: '40% 50%', duration: 3, stagger: { each: 0.03, from: 'random' } }, 0)
-    // Peak 3-7s
-    .to(openPaths,
-      { drawSVG: '73% 80%', duration: 4, stagger: { each: 0.03, from: 'random' } }, 3)
-    // Fade 7-10s
-    .to(openPaths,
-      { drawSVG: '100%', duration: 3, stagger: { each: 0.03, from: 'random' } }, 7)
+function waveAnime() {
+  const tl = gsap.timeline()
+  tl.fromTo(allEls, { drawSVG: 0 }, {
+    drawSVG: '40% 50%',
+    stroke: randomColorStr,
+    duration: 3,
+    ease: 'sine.in',
+  })
+    .to(allEls, {
+      drawSVG: '73% 80%',
+      duration: 4,
+      ease: 'power1.inOut',
+    })
+    .to(allEls, {
+      drawSVG: '100% 100%',
+      strokeWidth: '0.2rem',
+      duration: 3,
+      ease: 'sine.out',
+    })
+  return tl
 }
 ```
+
+Note: `drawSVG: 0` (number, not string) and `drawSVG: '100% 100%'` (both endpoints at 100% = zero visible stroke).
 
 ### Layer 3: colorAnime — elastic fill sweep
 
-```js
-const COLORS = ['#02f4c8', '#41bbf6', '#2dd4bf', '#34d399', '#06b6d4', '#0ea5e9']
+Positioned at `3` on the master (starts 3s in). Uses `yoyo: true, repeat: 1` on its own timeline so the fill sweeps in then back out. Stagger `each: 0.005` from `'edges'` for a pinch-to-center effect.
 
-function createColorAnime(els) {
-  return gsap.timeline({ repeat: -1, repeatRefresh: true })
-    .to(els, {
-      fill: () => gsap.utils.random(COLORS),
-      duration: 7, ease: 'elastic.out(1, 0.3)',
-      stagger: { each: 0.03, from: 'random' },
-    }, 3)
+```js
+const COLORS = '#02f4c8|#41bbf6|#2dd4bf|#34d399|#06b6d4|#0ea5e9'
+const randomColorStr = `random([${COLORS.split('|').map(c => `"${c}"`).join(',')}])`
+
+function colorAnime() {
+  const tl = gsap.timeline({ yoyo: true, repeat: 1 })
+  tl.to(allEls, {
+    fill: randomColorStr,
+    duration: 2,
+    stagger: { each: 0.005, from: 'edges' },
+    ease: 'elastic',
+  })
+  return tl
 }
 ```
 
-`repeatRefresh: true` regenerates random colors each loop. Stagger of 0.03 across 209 elements = ~6.27s spread.
+`yoyo: true, repeat: 1` means: play forward once, then reverse once — fill appears then fades back to transparent.
 
 ---
 
@@ -298,6 +325,6 @@ onUnmounted(() => {
 | Path draw (plugin) | DrawSVG | drawSVG: '0%' to '100%' | 1.5-2s |
 | Morph | MorphSVGPlugin | attr.d or morphSVG | 1-2s |
 | Pulse ring | None | scale, autoAlpha, repeat: -1 | 2s/cycle |
-| Color sweep | None | fill, repeatRefresh: true | 5-7s/cycle |
+| Color sweep | None | fill, yoyo+repeat:1, elastic | 2s/sweep |
 | Filter glow | None | attr.stdDeviation | 1.5s yoyo |
 | Scallop wave | None | scale, back.out(3), from: 'center' | 0.8s + stagger |

@@ -72,8 +72,10 @@ describe('MyComponent animations', () => {
     await new Promise(r => setTimeout(r, 100))
 
     // With reduced motion, elements should be in final state with no animation
-    const el = wrapper.find('.reveal').element
-    expect(gsap.getProperty(el, 'opacity')).toBe(1)
+    // NOTE: only works if the component implements prefers-reduced-motion handling
+    // (e.g. via gsap.matchMedia() with a reduceMotion condition)
+    const el = wrapper.find('.animated').element
+    expect(getComputedStyle(el).visibility).not.toBe('hidden')
   })
 })
 ```

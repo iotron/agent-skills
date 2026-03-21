@@ -35,12 +35,12 @@ GSAP plugins (ScrollTrigger, SplitText, etc.) are included in the `gsap` package
 
 ### Nuxt 3
 
-Register as a client-only plugin (`.client.js` suffix = runs only in browser).
+Register as a plugin. Nuxt auto-imports `defineNuxtPlugin`; the `process.client` guard inside handles SSR safety.
 
 ```js
-// plugins/gsap.client.js
+// plugins/gsap.js
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ScrollTrigger from 'gsap/ScrollTrigger'
 
 export default defineNuxtPlugin(() => {
   gsap.registerPlugin(ScrollTrigger)
@@ -62,11 +62,10 @@ Register plugins once in app entry.
 ```js
 // src/main.js
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ScrollTrigger from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Optional: provide globally via app
 app.provide('gsap', gsap)
 app.provide('ScrollTrigger', ScrollTrigger)
 ```
@@ -88,7 +87,7 @@ Use the official `@gsap/react` hook for automatic cleanup.
 ```jsx
 // src/App.jsx — register once at top level
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ScrollTrigger from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -105,51 +104,21 @@ function Component() {
 }
 ```
 
-Manual cleanup (without `@gsap/react`):
-
-```jsx
-useEffect(() => {
-  const ctx = gsap.context(() => {
-    gsap.to(ref.current, { x: 100 })
-  })
-  return () => ctx.revert()
-}, [])
-```
+Manual cleanup (without `@gsap/react`): wrap in `gsap.context()`, call `ctx.revert()` in the cleanup function.
 
 ### Next.js (App Router)
 
-Register in a client component — mark with `'use client'`.
+Register in a `'use client'` module. Never import GSAP in Server Components.
 
 ```jsx
-// lib/gsap.js — shared registration
+// lib/gsap.js
 'use client'
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import ScrollTrigger from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-
 gsap.registerPlugin(ScrollTrigger)
-
 export { gsap, ScrollTrigger, useGSAP }
 ```
-
-```jsx
-// components/AnimatedSection.jsx
-'use client'
-import { useRef } from 'react'
-import { gsap, useGSAP } from '@/lib/gsap'
-
-export function AnimatedSection() {
-  const containerRef = useRef(null)
-
-  useGSAP(() => {
-    gsap.from('.item', { autoAlpha: 0, y: 30, stagger: 0.1 })
-  }, { scope: containerRef })
-
-  return <section ref={containerRef}>...</section>
-}
-```
-
-**Important**: Never import GSAP in Server Components — it needs the DOM.
 
 ---
 
@@ -158,14 +127,12 @@ export function AnimatedSection() {
 Set once at app initialisation — inherited by every tween.
 
 ```js
-gsap.defaults({ ease: 'power2.out', duration: 0.5 })
-
-gsap.config({
-  force3D: 'auto',       // GPU compositing during animation
-  autoSleep: 120,        // frames before ticker sleeps (saves battery)
-  nullTargetWarn: false,  // silence null-target warnings in production
-})
+gsap.defaults({ overwrite: 'auto' })
+gsap.ticker.lagSmoothing(500, 33)
 ```
+
+- `overwrite: 'auto'` — kills only conflicting properties on the same target, preventing tween fights.
+- `lagSmoothing(500, 33)` — caps lag compensation so big frame drops don't cause a jarring jump.
 
 ---
 
@@ -174,50 +141,45 @@ gsap.config({
 Register effects once at app level so they're available everywhere.
 
 ```js
+// Wrapper appearance — fade + translate
 gsap.registerEffect({
-  name: 'fadeIn',
-  effect: (targets, config) => gsap.to(targets, {
-    autoAlpha: 1, y: 0, duration: config.duration, stagger: config.stagger,
-  }),
-  defaults: { duration: 0.6, stagger: 0.08 },
-  extendTimeline: true, // enables tl.fadeIn('.cards')
+  name: 'reveal',
+  effect: (targets, config) =>
+    gsap.fromTo(targets,
+      { y: 20, autoAlpha: 0 },
+      { y: 0, autoAlpha: 1, ...config },
+    ),
+  defaults: { duration: 0.8, ease: 'power2.out', stagger: 0 },
+  extendTimeline: true,
+})
+
+// SplitText masked word slide-up
+gsap.registerEffect({
+  name: 'textReveal',
+  effect: (targets, config) =>
+    gsap.to(targets, { y: '0%', ...config }),
+  defaults: { duration: 0.6, ease: 'power3.out', stagger: 0.06, force3D: true },
+  extendTimeline: true,
 })
 ```
 
-Usage: `gsap.effects.fadeIn('.cards')` or on timelines: `tl.fadeIn('.cards', {}, '-=0.2')`
+Usage: `gsap.effects.reveal('.cards')` or on timelines: `tl.reveal('.cards', {}, '-=0.2')`
 
 ---
 
-## 5. CSS Progressive Enhancement
+## 5. CSS Pre-hide with `visibility: hidden`
 
-Content **must** be visible without JS. Pre-hide only when animations will run.
+Elements animated by GSAP should be pre-hidden in CSS to prevent the SSR-to-hydration flash (CLS). GSAP's `autoAlpha` tween sets `visibility: visible` when it runs, so no JS class toggling is needed.
 
 ```css
-/* Default: content visible */
-.reveal { opacity: 1; transform: translateY(0); }
-
-/* Pre-hide ONLY when JS is active AND motion is OK */
-html.js-animations .reveal {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.js-animations .reveal {
-    opacity: 1;
-    transform: none;
-  }
+/* Pre-hide until GSAP animates them in via autoAlpha */
+.reveal,
+.text-reveal {
+  visibility: hidden;
 }
 ```
 
-Add the class at app startup:
-
-```js
-// In plugin/entry — runs once
-if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  document.documentElement.classList.add('js-animations')
-}
-```
+If JS never loads or the animation never fires, `visibility: hidden` keeps the element in layout flow (no layout shift) while hiding it — a safe progressive-enhancement baseline for animation targets.
 
 ---
 
@@ -264,30 +226,73 @@ export function useReducedMotion() {
 ## 7. Full Nuxt Plugin Example
 
 ```js
-// plugins/gsap.client.js
+// plugins/gsap.js
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
+import ScrollTrigger from 'gsap/ScrollTrigger'
+import TextPlugin from 'gsap/TextPlugin'
+
+/** Lazy-loader factory: import once, register once, cache forever. */
+function createLazyLoader(importFn, exportKey = 'default') {
+  let cached = null
+  return async () => {
+    if (!cached) {
+      const mod = await importFn()
+      cached = mod[exportKey]
+      gsap.registerPlugin(cached)
+    }
+    return cached
+  }
+}
 
 export default defineNuxtPlugin(() => {
-  gsap.registerPlugin(ScrollTrigger, SplitText)
+  if (process.client) {
+    gsap.registerPlugin(ScrollTrigger, TextPlugin)
 
-  gsap.defaults({ ease: 'power2.out', duration: 0.5 })
-  gsap.config({ nullTargetWarn: false })
+    gsap.defaults({ overwrite: 'auto' })
+    gsap.ticker.lagSmoothing(500, 33)
 
-  gsap.registerEffect({
-    name: 'fadeIn',
-    effect: (targets, config) => gsap.to(targets, {
-      autoAlpha: 1, y: 0, duration: config.duration, stagger: config.stagger,
-    }),
-    defaults: { duration: 0.6, stagger: 0.08 },
-    extendTimeline: true,
-  })
+    // ── Registered effects ──
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.documentElement.classList.add('js-animations')
+    gsap.registerEffect({
+      name: 'reveal',
+      effect: (targets, config) =>
+        gsap.fromTo(targets,
+          { y: 20, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, ...config },
+        ),
+      defaults: { duration: 0.8, ease: 'power2.out', stagger: 0 },
+      extendTimeline: true,
+    })
+
+    gsap.registerEffect({
+      name: 'textReveal',
+      effect: (targets, config) =>
+        gsap.to(targets, { y: '0%', ...config }),
+      defaults: { duration: 0.6, ease: 'power3.out', stagger: 0.06, force3D: true },
+      extendTimeline: true,
+    })
+
+    // Auto-sort ScrollTriggers by DOM position before every refresh
+    ScrollTrigger.addEventListener('refreshInit', () => ScrollTrigger.sort())
   }
 
-  return { provide: { gsap, ScrollTrigger, SplitText } }
+  // Lazy loading helpers for premium/heavy plugins
+  const lazyLoadDrawSVG   = createLazyLoader(() => import('gsap/DrawSVGPlugin'))
+  const lazyLoadMorphSVG  = createLazyLoader(() => import('gsap/MorphSVGPlugin'))
+  const lazyLoadScramble  = createLazyLoader(() => import('gsap/ScrambleTextPlugin'))
+  const lazyLoadSplitText = createLazyLoader(() => import('gsap/SplitText'), 'SplitText')
+
+  return {
+    provide: {
+      gsap,
+      ScrollTrigger,
+      lazyLoadDrawSVG,
+      lazyLoadMorphSVG,
+      lazyLoadScramble,
+      lazyLoadSplitText,
+    },
+  }
 })
 ```
+
+**Key patterns:** default imports (GSAP v3 uses default exports), `createLazyLoader` factory for premium plugins (dynamic import on first use, keeps initial bundle small), `ScrollTrigger.sort()` on `refreshInit` (pins refresh before downstream triggers). Provides: `$gsap`, `$ScrollTrigger`, plus four lazy loaders (`$lazyLoadSplitText`, etc.).

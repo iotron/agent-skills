@@ -123,52 +123,103 @@ function onTilt(e) {
 
 ## 2. Spring Physics (Elastic Cursor Followers)
 
-Multiple blobs chase the cursor with different durations for a staggered, physics-like feel.
+Multiple blobs chase the cursor with different durations for a staggered, physics-like feel. Rest positions are **percentage-based** relative to the container, so they adapt to any container size.
 
 ```js
-const BLOB_CONFIG = [
-  { el: null, duration: 0.6,  homeX: -40, homeY: -20 },
-  { el: null, duration: 0.8,  homeX:  30, homeY: -35 },
-  { el: null, duration: 1.1,  homeX:   0, homeY:  25 },
+// Blob config — x/y are PERCENTAGES (0-100) of container dimensions
+const blobs = [
+  { x: 15, y: 40, size: 90,  dur: 0.9, colorStop: 'rgba(20,184,166,0.4)' },
+  { x: 30, y: 55, size: 55,  dur: 0.6, colorStop: 'rgba(var(--glow-secondary-rgb),0.35)' },
+  { x: 55, y: 30, size: 120, dur: 1.1, colorStop: 'rgba(var(--glow-primary-rgb),0.3)' },
+  { x: 68, y: 65, size: 60,  dur: 0.7, colorStop: 'rgba(6,182,212,0.35)' },
+  { x: 80, y: 25, size: 75,  dur: 0.8, colorStop: 'rgba(20,184,166,0.35)' },
 ]
 
+const containerRef = ref(null)
+const blobRefs = ref([])
+let ctx
+```
+
+### Initial placement — percentage of container
+
+```js
+const setupVisuals = () => {
+  const container = containerRef.value
+  if (!container) return
+  const cw = container.offsetWidth
+  const ch = container.offsetHeight
+
+  blobRefs.value.forEach((blob, i) => {
+    if (!blob) return
+    const b = blobs[i]
+    blob.style.width = `${b.size}px`
+    blob.style.height = `${b.size}px`
+    blob.style.background = `radial-gradient(circle, ${b.colorStop}, transparent)`
+    blob.style.filter = `blur(${Math.round(b.size / 4)}px)`
+    // Position at percentage of container; xPercent/yPercent: -50 centres the blob on the point
+    gsap.set(blob, { xPercent: -50, yPercent: -50, x: (cw * b.x) / 100, y: (ch * b.y) / 100 })
+  })
+}
+```
+
+### moveBlobs — blobs go to exact cursor position
+
+```js
 onMounted(() => {
   ctx = gsap.context((self) => {
-    BLOB_CONFIG.forEach((b, i) => {
-      b.el = blobRefs.value[i]
-      gsap.set(b.el, { x: b.homeX, y: b.homeY, force3D: true })
-    })
+    setupVisuals()
 
-    self.add('moveBlobs', (mouseX, mouseY) => {
-      BLOB_CONFIG.forEach((b) => {
-        b.el.style.willChange = 'transform'
-        gsap.to(b.el, {
-          x: mouseX + b.homeX,
-          y: mouseY + b.homeY,
-          duration: b.duration,
+    // mx, my are local coords (e.clientX - rect.left, e.clientY - rect.top)
+    self.add('moveBlobs', (mx, my) => {
+      blobRefs.value.forEach((blob, i) => {
+        if (!blob) return
+        gsap.to(blob, {
+          x: mx,                        // exact cursor position, NOT mx + offset
+          y: my,
+          duration: blobs[i].dur,       // unique per blob → staggered elastic feel
           ease: 'elastic.out(1.2, 0.3)',
           overwrite: 'auto',
+          force3D: true,
         })
       })
     })
 
+    // resetBlobs recalculates container dimensions for fresh percentage positions
     self.add('resetBlobs', () => {
-      BLOB_CONFIG.forEach((b) => {
-        gsap.to(b.el, {
-          x: b.homeX,
-          y: b.homeY,
-          duration: 0.8,
-          ease: 'elastic.out(1, 0.4)',
-          overwrite: 'auto',
-          onComplete: () => { b.el.style.willChange = 'auto' },
+      const container = containerRef.value
+      if (!container) return
+      const cw = container.offsetWidth
+      const ch = container.offsetHeight
+      blobRefs.value.forEach((blob, i) => {
+        if (!blob) return
+        const b = blobs[i]
+        gsap.to(blob, {
+          x: (cw * b.x) / 100,
+          y: (ch * b.y) / 100,
+          duration: 1.6,                // slower return
+          ease: 'elastic.out(1, 0.4)',  // softer spring on reset
+          force3D: true,                // no overwrite needed — single reset call
         })
       })
     })
-  }, scopeRef.value)
+  }, containerRef.value?.closest('section'))
 })
 ```
 
-**Key rules**: unique `duration` per blob (0.6-1.1s) creates stagger | `elastic.out(1.2, 0.3)` for overshoot | `overwrite: 'auto'` kills stale tweens | `homeX`/`homeY` define rest positions
+### Event wiring
+
+```js
+const onMouseMove = (e) => {
+  const container = containerRef.value
+  if (!container || !ctx) return
+  const rect = container.getBoundingClientRect()
+  ctx.moveBlobs(e.clientX - rect.left, e.clientY - rect.top)
+}
+
+const onMouseLeave = () => { ctx?.resetBlobs() }
+```
+
+**Key rules**: rest positions are **percentage-based** (`cw * b.x / 100`) so layout is responsive | on mousemove blobs go to the **exact** cursor position (no offset added) | `resetBlobs` re-reads container dimensions for accurate return | unique `duration` per blob (0.6-1.1s) creates stagger | `elastic.out(1.2, 0.3)` for overshoot on move, softer `elastic.out(1, 0.4)` with longer 1.6s duration on reset | `overwrite: 'auto'` on move tweens kills stale tweens
 
 ---
 
@@ -265,47 +316,65 @@ gsap.ticker.add(() => {
 
 ---
 
-## 5. Circuit Glow (CSS Custom Properties)
+## 5. Circuit Glow (CSS Custom Properties + mask-image)
 
-For maximum speed, pipe mouse position directly to CSS custom properties without GSAP tweening. The GPU handles the radial gradient via the shader pipeline.
+For maximum speed, pipe mouse position directly to CSS custom properties without GSAP tweening. Uses a **real div element** (not a pseudo-element) with `mask-image` to reveal a glow layer. Opacity is CSS-transition-based, triggered by parent `:hover`.
+
+### Template — real div, not ::after
+
+```vue
+<div class="relative w-full" @mousemove="onMouseMove">
+  <!-- Main content (z-0) -->
+  <div ref="circuitWrap" class="relative z-0" />
+
+  <!-- Cursor glow — real div, absolute overlay -->
+  <div ref="glowRef" class="circuit-glow absolute inset-0 z-[1]" style="--glow-x: 0.5; --glow-y: 0.5" />
+</div>
+```
+
+### JS — unitless ratios (0-1), not pixels
 
 ```js
-function onGlowMove(e) {
-  const rect = glowRef.value.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  glowRef.value.style.setProperty('--glow-x', `${x}px`)
-  glowRef.value.style.setProperty('--glow-y', `${y}px`)
-}
+const glowRef = ref(null)
 
-function onGlowLeave() {
-  glowRef.value.style.setProperty('--glow-x', '50%')
-  glowRef.value.style.setProperty('--glow-y', '50%')
+const onMouseMove = (e) => {
+  if (!glowRef.value) return
+  const rect = e.currentTarget.getBoundingClientRect()
+  // Store UNITLESS RATIOS (0 to 1), not pixel values
+  glowRef.value.style.setProperty('--glow-x', (e.clientX - rect.left) / rect.width)
+  glowRef.value.style.setProperty('--glow-y', (e.clientY - rect.top) / rect.height)
 }
 ```
 
-### CSS
+No `onMouseLeave` handler needed — opacity fades out via CSS transition when cursor leaves the parent.
+
+### CSS — mask-image with calc(), parent :hover for opacity
 
 ```css
 .circuit-glow {
-  --glow-x: 50%;
-  --glow-y: 50%;
-  position: relative;
-}
-.circuit-glow::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    350px circle at var(--glow-x) var(--glow-y),
-    rgba(0, 255, 170, 0.15),
-    transparent 70%
+  /* Use a background-image of the circuit SVG with color filters */
+  background-image: url('~/assets/images/circuit-board.svg');
+  @apply bg-cover bg-center bg-no-repeat opacity-0;
+  filter: invert(1) sepia(1) saturate(5) hue-rotate(130deg) brightness(0.8);
+
+  /* mask-image uses calc(var * 100%) to convert unitless ratio → percentage position */
+  mask-image: radial-gradient(
+    circle 350px at calc(var(--glow-x) * 100%) calc(var(--glow-y) * 100%),
+    black 0%, transparent 100%
   );
-  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    circle 350px at calc(var(--glow-x) * 100%) calc(var(--glow-y) * 100%),
+    black 0%, transparent 100%
+  );
+}
+
+/* Opacity controlled by CSS transition on parent hover — NOT GSAP */
+div:hover .circuit-glow {
+  @apply opacity-35 transition-opacity duration-500;
 }
 ```
 
-**Key rules**: direct `style.setProperty` (no GSAP overhead) | CSS custom properties + `radial-gradient` = GPU-composited | 350px default radius | `pointer-events: none` on pseudo-element
+**Key rules**: real `<div>` element (not `::after` pseudo) | stores **unitless ratios** (0-1) via `style.setProperty`, CSS uses `calc(var(--glow-x) * 100%)` to position | `mask-image` with `radial-gradient` reveals the glow area | opacity is **CSS-transition-based** (`opacity-0` default, `opacity-35` on parent `:hover` with `transition-opacity duration-500`) — no GSAP involved | direct `style.setProperty` (no GSAP overhead) for cursor tracking
 
 ---
 

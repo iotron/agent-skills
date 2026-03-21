@@ -4,10 +4,10 @@ description: >
   GSAP text animation patterns for Vue 3 / Nuxt 3 using SplitText and ScrambleTextPlugin. Covers:
   SplitText setup with lazy-loading and font-ready awaiting, masked word slide-up reveal (production
   pattern used in 25+ component headings), ScrambleText decode with terminal/cyber/glitch character
-  sets, combined clip + scramble chainTextReveal pattern, kinetic character split with random scatter,
+  sets, combined clip + scramble pattern, kinetic character split with random scatter,
   elastic type assembly with pin + scrub scroll, and CRITICAL gotchas from real production debugging
-  (autoSplit resize bugs, font CLS, overwrite conflicts, blank textContent collapse). Also covers the
-  useReveal composable API (hero, scroll, split, chainTextReveal) and CSS pre-hide classes.
+  (autoSplit + onSplit pattern, font CLS, overwrite conflicts, blank textContent collapse). Also covers the
+  useReveal composable API (hero, scroll, split) and CSS pre-hide classes.
   Triggers: SplitText, split text, text animation, word animation, scramble text, ScrambleTextPlugin,
   text reveal, masked text, clip reveal, word stagger, text stagger, character animation, char split,
   kinetic text, elastic type, text decode, terminal text, cyber text, glitch text, chainTextReveal,
@@ -37,12 +37,10 @@ let ctx
 const splits = []
 
 onMounted(async () => {
-  // CRITICAL: Wait for fonts BEFORE splitting (prevents CLS)
-  ;[SplitText] = await Promise.all([
-    $lazyLoadSplitText(),
-    $lazyLoadScramble(),    // load if using scramble
-    document.fonts.ready,   // prevents incorrect width measurements
-  ])
+  // CRITICAL: fonts MUST load before SplitText to prevent incorrect measurements
+  await document.fonts.ready
+  SplitText = await $lazyLoadSplitText()
+  await $lazyLoadScramble()                     // optional — only if using scramble
 
   ctx = gsap.context(() => {
     // animations here
@@ -284,18 +282,29 @@ ctx = gsap.context(() => {
 
 These are hard-won lessons from real production debugging. Read carefully before implementing any text animation.
 
-### NEVER use autoSplit: true with timelines
+### autoSplit: true — use ONLY with onSplit() callback
 
-`autoSplit: true` attaches a ResizeObserver that re-splits the DOM on resize (including font load events). This **invalidates all element references** stored in the timeline. Words array points to removed DOM nodes.
+`autoSplit: true` attaches a ResizeObserver that re-splits the DOM on resize (including font load). If you create animations **outside** `onSplit()`, element references go stale after re-split.
+
+The official GSAP docs recommend `autoSplit: true` combined with `onSplit()` — the callback receives fresh references and the returned animation is auto-cleaned on re-split.
 
 ```js
-// BAD — timeline targets become stale after resize/font load
+// BAD — animations outside onSplit, references go stale on resize
 const s = SplitText.create(el, { type: 'words', autoSplit: true })
 gsap.to(s.words, { y: 0 }) // these elements may be destroyed on resize
 
-// GOOD — one-time split, stable references
+// GOOD — official pattern: animations inside onSplit(), returned for auto-cleanup
+SplitText.create(el, {
+  type: 'words', mask: 'words', autoSplit: true,
+  onSplit(self) {
+    return gsap.from(self.words, { y: '100%', duration: 0.8, stagger: 0.06 })
+  },
+})
+
+// ALSO GOOD — one-time split after fonts.ready, stable references
+await document.fonts.ready
 const s = SplitText.create(el, { type: 'words' })
-gsap.to(s.words, { y: 0 }) // these elements persist until s.revert()
+gsap.to(s.words, { y: 0 }) // persist until s.revert()
 ```
 
 ### Await document.fonts.ready BEFORE SplitText.create()
@@ -347,7 +356,7 @@ gsap.to(el, { scrambleText: { text: 'HELLO', chars: '01' } })
 
 ### overwrite: false on colocated per-word tweens
 
-The plugin sets `gsap.defaults({ overwrite: 'auto' })`. When two tweens target the same element at the same timeline position, `overwrite: 'auto'` kills the first tween (scramble) when the second (y slide) starts. **Explicitly set `overwrite: false`** on both.
+GSAP's default `overwrite` is `false`, but this project's plugin sets `gsap.defaults({ overwrite: 'auto' })` globally. With `overwrite: 'auto'`, two tweens targeting the same element at the same timeline position will conflict — the second kills overlapping properties from the first (e.g., scramble killed by the y slide). **Explicitly set `overwrite: false`** on colocated per-word tweens.
 
 ```js
 // BAD — scramble gets killed by overwrite: 'auto'
@@ -375,7 +384,7 @@ SplitText creates word `<div>` elements inside existing `<span>` tags. This mean
 
 Elements animated by GSAP should be pre-hidden in CSS to prevent the flash of unstyled content (FOUC) between SSR render and GSAP initialization. Use `visibility: hidden` (not `display: none` — which removes the element from layout and breaks ScrollTrigger measurements).
 
-GSAP's `autoAlpha` tween automatically sets `visibility: inherit` when animating, so the element becomes visible when the animation runs. The class names below (`.reveal`, `.text-reveal`) are a recommended convention — use whatever fits your project.
+GSAP's `autoAlpha` tween automatically sets `visibility: inherit` when animating, so the element becomes visible when the animation runs. The class names `.reveal` and `.text-reveal` are used by the `useReveal` composable as default selectors — if you use `useReveal`, these class names are required unless you pass custom selectors to `hero()` and `scroll()`.
 
 ```css
 /* client/app/assets/css/tailwind.css */
@@ -399,7 +408,7 @@ The `useReveal` composable (`client/app/composables/useReveal.js`) is the produc
 | `hero(selector?, overrides?)` | Immediate reveal for above-fold. Auto-detects `.text-reveal` children and chains word stagger + scramble |
 | `scroll(selector?, overrides?)` | Per-element ScrollTrigger reveal. Combines `.reveal` + `.text-reveal` into one timeline per element |
 | `split(target)` | SplitText wrapper: creates masked word split, pre-hides words, makes container visible, tracks for cleanup |
-| `chainTextReveal(tl, words, position)` | Adds per-word slide-up + scramble decode to any timeline at given position |
+| `chainTextReveal(tl, words, position)` | **Internal only** — not exported. Used internally by `hero()` and `scroll()`. For custom timelines, implement the pattern manually (see Section 4). |
 
 ### Usage examples
 
@@ -412,13 +421,17 @@ onMounted(() => init(() => hero('.reveal', { textDelay: 0.2 })))
 const { init, scroll } = useReveal(sectionRef)
 onMounted(() => init(() => scroll('.reveal', { trigger: sectionRef.value, start: 'top 75%', once: true })))
 
-// Manual split + chainTextReveal (custom timelines)
-const { init, split, chainTextReveal, gsap } = useReveal(sectionRef)
+// Manual split + custom timeline (chainTextReveal is internal, implement manually)
+const { init, split, gsap } = useReveal(sectionRef)
 onMounted(() => init(() => {
   const s = split('.custom-heading')
   const tl = gsap.timeline({ scrollTrigger: { trigger: '.custom-heading', start: 'top 80%' } })
   tl.reveal('.wrapper')
-  chainTextReveal(tl, s.words, '-=0.4')
+  // Manual chainTextReveal pattern (see Section 4):
+  s.words.forEach((w, i) => {
+    const pos = tl.duration() + i * 0.06
+    tl.to(w, { y: '0%', duration: 0.8, ease: 'power4.out', force3D: true, overwrite: false }, pos)
+  })
 }))
 ```
 

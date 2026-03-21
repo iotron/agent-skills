@@ -71,10 +71,11 @@ onUnmounted(() => ctx?.revert()) // kills ALL tweens + ScrollTriggers + restores
 
 ### What ctx.revert() does
 
-1. Kills all tweens (including mid-flight)
-2. Kills all ScrollTriggers
+1. Kills all tweens created within the context (including mid-flight)
+2. Kills all ScrollTriggers created within the context
 3. Restores all inline styles to pre-animation state
-4. Removes all `ctx.add()` event listeners
+
+**Does NOT remove DOM event listeners.** You must still clean up `addEventListener` calls yourself (in `onUnmounted` or via Vue template `@` handlers which auto-clean). `ctx.add()` named methods organize event-handler code and track the GSAP tweens they create, but they don't manage the DOM listeners that call them.
 
 No manual `scrollTriggers[]` array needed — context collects everything.
 
@@ -207,11 +208,11 @@ Registered once in the plugin (see gsap-setup), use anywhere:
 
 ```js
 // Direct usage
-gsap.effects.fadeIn('.cards')
+gsap.effects.reveal('.cards')
 gsap.effects.reveal('.section', { duration: 1.2 })
 
 // On timelines (requires extendTimeline: true in registration)
-tl.fadeIn('.cards', { duration: 0.4 }, '-=0.2')
+tl.reveal('.cards', { duration: 0.4 }, '-=0.2')
 tl.reveal('.items', {}, '<0.1')
 ```
 

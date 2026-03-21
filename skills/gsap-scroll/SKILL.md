@@ -82,7 +82,7 @@ ctx = gsap.context(() => {
 }, sectionRef.value)
 ```
 
-- `overwrite: 'auto'` prevents conflicting tweens on fast scroll
+- `overwrite: 'auto'` (or `overwrite: true` as the official GSAP docs recommend for batch) prevents conflicting tweens on fast scroll
 - `stagger: 0.08` within batch -- cards enter sequentially, not simultaneously
 - Functional `rotation` re-evaluates per element for organic randomness
 
