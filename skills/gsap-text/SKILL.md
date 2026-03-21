@@ -309,16 +309,21 @@ SplitText = await $lazyLoadSplitText()
 // NOW safe to split
 ```
 
-### visibility: 'visible', NOT autoAlpha: 1, in split()
+### When using `mask: 'words'`: visibility: 'visible', NOT autoAlpha: 1
 
-Split words are hidden by the mask (`y: '100%'`). The container just needs `visibility: visible` to un-hide. Using `autoAlpha: 1` would set `opacity: 1` which overrides the parent `.reveal` wrapper's fade-in animation.
+Only applies when using SplitText with `mask: 'words'`. The mask creates an `overflow: hidden` wrapper — words are hidden via `y: '100%'` (pushed below the mask), not via opacity. The container just needs `visibility: visible` to un-hide the `.text-reveal` CSS class. Using `autoAlpha: 1` would set `opacity: 1` on the container, overriding the parent `.reveal` wrapper's fade-in animation.
+
+Without `mask: 'words'` (regular SplitText), `autoAlpha` is fine since words are hidden via `autoAlpha: 0` directly.
 
 ```js
-// BAD — overrides parent .reveal opacity tween
+// BAD (with mask: 'words') — overrides parent .reveal opacity tween
 gsap.set(el, { autoAlpha: 1 })
 
-// GOOD — container visible, words still hidden by mask
+// GOOD (with mask: 'words') — container visible, words still hidden by mask
 gsap.set(el, { visibility: 'visible' })
+
+// OK (without mask) — words hidden via autoAlpha: 0 directly
+gsap.set(el, { autoAlpha: 1 })
 ```
 
 ### Never blank textContent before scramble
