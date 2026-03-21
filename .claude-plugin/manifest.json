@@ -1,0 +1,16 @@
+{
+  "name": "iotron-agent-skills",
+  "version": "1.0.0",
+  "description": "Reusable Claude Code skills for GSAP animation — setup, patterns, ScrollTrigger, interactive, text, SVG, VFX, optimisation, and testing for Vue/Nuxt and React",
+  "skills": [
+    "skills/gsap-setup",
+    "skills/gsap-animate",
+    "skills/gsap-scroll",
+    "skills/gsap-interact",
+    "skills/gsap-text",
+    "skills/gsap-svg",
+    "skills/gsap-vfx",
+    "skills/gsap-optimise",
+    "skills/gsap-test"
+  ]
+}
