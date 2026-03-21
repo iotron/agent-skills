@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "iotron-agent-skills",
+  "description": "GSAP animation skills for Vue/Nuxt and React — setup, patterns, ScrollTrigger, interactive, text, SVG, VFX, optimisation, and testing",
+  "owner": {
+    "name": "iotron",
+    "email": "hello@iotron.co"
+  },
+  "plugins": [
+    {
+      "name": "iotron-agent-skills",
+      "description": "9 GSAP skills covering the full animation workflow: setup, animate (orchestrator), scroll, interact, text, SVG, VFX, optimise, and test",
+      "author": {
+        "name": "iotron"
+      },
+      "source": ".",
+      "category": "productivity"
+    }
+  ]
+}

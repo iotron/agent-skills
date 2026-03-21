@@ -1,0 +1,6 @@
+{
+  "name": "iotron-agent-skills",
+  "description": "GSAP animation skills for Vue/Nuxt and React — setup, patterns, ScrollTrigger, interactive, text, SVG, VFX, optimisation, and testing",
+  "version": "1.0.0",
+  "skills": "./skills/"
+}
