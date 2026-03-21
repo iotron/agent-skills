@@ -34,17 +34,39 @@ Reusable Claude Code skills for GSAP animation in Vue/Nuxt and React projects.
 
 ## Installation
 
-```bash
-# Install this plugin
-claude /plugin install iotron/agent-skills
+### Step 1: Add the marketplace and install
 
-# Also install the official GSAP skills (API reference)
-claude /plugin install greensock/gsap-skills
+```bash
+/plugin marketplace add iotron/agent-skills
+/plugin install iotron
+/reload-plugins
 ```
 
-## Companion: Official GSAP Skills
+Skills are now available as `iotron:gsap-animate`, `iotron:gsap-scroll`, etc.
 
-Designed to work alongside [greensock/gsap-skills](https://github.com/greensock/gsap-skills):
+### Step 2 (optional): Enable short names
+
+By default, plugin skills are namespaced (`iotron:gsap-animate`). To use short names like `/gsap-animate`, symlink from the plugin cache into your project's skills directory:
+
+```bash
+# Run from your project root
+CACHE=$(ls -d ~/.claude/plugins/marketplaces/iotron*/skills 2>/dev/null | head -1)
+mkdir -p .claude/skills
+for skill in "$CACHE"/gsap-*; do
+  ln -sf "$skill" ".claude/skills/$(basename $skill)"
+done
+```
+
+Now `/gsap-animate`, `/gsap-scroll`, etc. work directly. Updates via `/plugin marketplace update iotron` auto-propagate through the symlinks.
+
+### Companion: Official GSAP Skills
+
+Also install the official GSAP API reference skills:
+
+```bash
+/plugin marketplace add greensock/gsap-skills
+/plugin install gsap-skills
+```
 
 | This plugin | Official GSAP skills |
 |-------------|---------------------|
@@ -52,6 +74,15 @@ Designed to work alongside [greensock/gsap-skills](https://github.com/greensock/
 | Vue/Nuxt + React focused | All frameworks |
 | Real codebase patterns & gotchas | Complete API coverage |
 | Anti-patterns & audit checklists | Plugin-by-plugin docs |
+
+## Updating
+
+```bash
+/plugin marketplace update iotron
+/reload-plugins
+```
+
+If you used symlinks (Step 2), they auto-update — no action needed.
 
 ## Contributing
 
