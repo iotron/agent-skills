@@ -6,7 +6,7 @@ Reusable Claude Code skills for GSAP animation in Vue/Nuxt and React projects.
 
 > If these skills save you time, [star the repo](https://github.com/iotron/agent-skills) — it helps others find it and motivates updates.
 
-## Skills (9)
+## Skills (12)
 
 ### Flow: setup → animate → optimise → test
 
@@ -19,6 +19,9 @@ Reusable Claude Code skills for GSAP animation in Vue/Nuxt and React projects.
 | **gsap-text** | Text animation | SplitText, ScrambleText, char split, elastic type |
 | **gsap-svg** | SVG animation | DrawSVG, morph, circuit tree, path drawing |
 | **gsap-vfx** | Visual effects | Glitch, marquee, counters, floating, pulse |
+| **gsap-cursor** | Cursor-driven effects | Followers, trails, magnetic, spotlight, spring physics |
+| **gsap-canvas** | Canvas + GSAP rendering | Particle systems, draw loops, canvas integration |
+| **gsap-showcase** | Premium compositions | Complete multi-plugin animations for production |
 | **gsap-optimise** | Performance audit | GPU, quickTo, force3D, anti-patterns, checklist |
 | **gsap-test** | Testing & debug | Vitest, Playwright, markers, pre-launch checklist |
 
@@ -31,6 +34,8 @@ Reusable Claude Code skills for GSAP animation in Vue/Nuxt and React projects.
 | Circuit board | gsap-svg + gsap-interact |
 | Cyber/terminal page | gsap-text + gsap-vfx + gsap-svg |
 | Stats section | gsap-vfx + gsap-scroll |
+| Premium hero | gsap-showcase + gsap-text + gsap-scroll + gsap-cursor |
+| Interactive canvas | gsap-showcase + gsap-canvas + gsap-scroll |
 
 ### Progressive Disclosure
 
@@ -77,6 +82,9 @@ Skills auto-trigger based on context, or invoke directly:
 /iotron-agent-skills:gsap-optimise
 /iotron-agent-skills:gsap-test
 /iotron-agent-skills:gsap-setup
+/iotron-agent-skills:gsap-cursor
+/iotron-agent-skills:gsap-canvas
+/iotron-agent-skills:gsap-showcase
 ```
 
 ## Updating

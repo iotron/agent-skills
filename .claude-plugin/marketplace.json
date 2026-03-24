@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "iotron-agent-skills",
-      "description": "9 GSAP skills covering the full animation workflow: setup, animate, scroll, interact, text, SVG, VFX, optimise, and test",
+      "description": "12 GSAP skills covering the full animation workflow: setup, animate, scroll, interact, cursor, text, SVG, VFX, canvas, showcase, optimise, and test",
       "source": "./"
     }
   ]

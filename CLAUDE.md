@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Claude Code plugin providing 9 GSAP animation skills for Vue 3 / Nuxt 3 and React projects. Published as `iotron-agent-skills` on the Claude Code marketplace.
+Claude Code plugin providing 12 GSAP animation skills for Vue 3 / Nuxt 3 and React projects. Published as `iotron-agent-skills` on the Claude Code marketplace.
 
 - **Repository**: `iotron/agent-skills`
 - **Plugin name**: `iotron-agent-skills`
@@ -16,7 +16,7 @@ Claude Code plugin providing 9 GSAP animation skills for Vue 3 / Nuxt 3 and Reac
 ```
 gsap-setup → gsap-animate → gsap-optimise → gsap-test
                   ↓ dispatches to:
-    gsap-scroll | gsap-interact | gsap-text | gsap-svg | gsap-vfx
+    gsap-scroll | gsap-interact | gsap-cursor | gsap-text | gsap-svg | gsap-vfx | gsap-canvas | gsap-showcase
 ```
 
 ### Progressive Disclosure (3-tier)
@@ -47,6 +47,9 @@ skills/
   gsap-vfx/           # Glitch, marquee, counters, floating
   gsap-optimise/      # Performance audit & patterns
   gsap-test/          # Testing & debugging
+  gsap-cursor/        # Cursor followers, trails, magnetic, spotlight
+  gsap-canvas/        # Canvas + GSAP rendering pipeline
+  gsap-showcase/      # Premium multi-plugin animation compositions
   gsap-setup/         # Project setup & configuration
 ```
 
