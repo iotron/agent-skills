@@ -1,7 +1,7 @@
 ---
 name: gsap-vfx
 description: >
-  Production recipes for GSAP visual effects in Vue 3 / Nuxt 3.
+  Production recipes for GSAP visual effects.
   Companion to official gsap-core and gsap-timeline skills (API reference).
   Triggers: glitch effect, cyberpunk glitch, RGB displacement, chromatic aberration, scramble text,
   jitter animation, noise bars, marquee, infinite scroll, directional marquee, rolling counter,

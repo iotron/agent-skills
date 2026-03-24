@@ -1,7 +1,7 @@
 ---
 name: gsap-cursor
 description: >
-  Production recipes for cursor and pointer-driven GSAP animations in Vue 3 / Nuxt 3.
+  Production recipes for cursor and pointer-driven GSAP animations.
   Companion to official gsap-core and gsap-performance skills (API reference).
   Triggers: cursor follower, cursor effect, mouse follower, magnetic button, spotlight cursor,
   cursor trail, particle trail, spring cursor, elastic cursor, pointer animation, custom cursor,

@@ -5,7 +5,7 @@
     "email": "hello@iotron.co"
   },
   "metadata": {
-    "description": "GSAP animation skills for Vue/Nuxt and React — setup, patterns, optimisation, and testing"
+    "description": "12 GSAP animation skills — production recipes for scroll, text, SVG, cursor, canvas, and visual effects in any framework"
   },
   "plugins": [
     {

@@ -1,7 +1,7 @@
 ---
 name: gsap-text
 description: >
-  Production recipes for GSAP text animations in Vue 3 / Nuxt 3 using SplitText and ScrambleTextPlugin.
+  Production recipes for GSAP text animations using SplitText and ScrambleTextPlugin.
   Companion to official gsap-plugins skill (API reference).
   Triggers: SplitText, split text, text animation, word animation, scramble text, ScrambleTextPlugin,
   text reveal, masked text, clip reveal, word stagger, text stagger, character animation, char split,

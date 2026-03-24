@@ -1,7 +1,7 @@
 ---
 name: gsap-svg
 description: >
-  Production recipes for GSAP SVG animations in Vue 3 / Nuxt 3.
+  Production recipes for GSAP SVG animations.
   Companion to official gsap-plugins skill (API reference).
   Triggers: SVG animation, GSAP SVG, path drawing, strokeDashoffset, DrawSVG, drawSVG, SVG morph,
   MorphSVGPlugin, circuit tree, circuit board, CTAHud, HUD animation, pulse ring, scallop wave,

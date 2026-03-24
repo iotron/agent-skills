@@ -1,7 +1,7 @@
 ---
 name: gsap-optimise
 description: >
-  Production recipes for GSAP performance optimisation in Vue 3 / Nuxt 3 and React. Apply after
+  Production recipes for GSAP performance optimisation. Apply after
   building animations (gsap-animate) to audit and improve performance.
   Companion to official gsap-performance skill (API reference).
   Triggers: GSAP performance, animation optimise, animation slow, jank, 60fps, memory leak,

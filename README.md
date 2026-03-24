@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/iotron/agent-skills?style=social)](https://github.com/iotron/agent-skills)
 
-Reusable Claude Code skills for GSAP animation in Vue/Nuxt and React projects.
+Reusable Claude Code skills for premium GSAP animations — production recipes for any framework.
 
 > If these skills save you time, [star the repo](https://github.com/iotron/agent-skills) — it helps others find it and motivates updates.
 
@@ -58,7 +58,7 @@ Install the official GSAP skills first — this plugin provides production recip
 | This plugin | Official GSAP skills |
 |-------------|---------------------|
 | **How** to build specific animations (recipes, patterns, gotchas) | **What** GSAP can do (API reference) |
-| Vue 3 / Nuxt 3 + React focused | All frameworks |
+| Any framework (Vue, Nuxt, React, Svelte, Astro, vanilla) | All frameworks |
 | Production-tested multi-layer patterns | Complete plugin-by-plugin docs |
 | Performance audit checklists | General performance guidance |
 

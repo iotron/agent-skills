@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Claude Code plugin providing 12 GSAP animation skills for Vue 3 / Nuxt 3 and React projects. Published as `iotron-gsap-cookbook` on the Claude Code marketplace.
+Claude Code plugin providing 12 GSAP animation skills — production recipes for scroll, text, SVG, cursor, canvas, and visual effects in any framework. Published as `iotron-gsap-cookbook` on the Claude Code marketplace.
 
 - **Repository**: `iotron/agent-skills`
 - **Plugin name**: `iotron-gsap-cookbook`

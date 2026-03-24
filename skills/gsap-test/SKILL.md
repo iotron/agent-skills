@@ -2,8 +2,8 @@
 name: gsap-test
 disable-model-invocation: true
 description: >
-  Production recipes for testing, debugging, and verification of GSAP animations in Vue 3 / Nuxt 3
-  and React. No API overlap — unique to this plugin.
+  Production recipes for testing, debugging, and verification of GSAP animations.
+  No API overlap — unique to this plugin.
   Triggers: test animation, animation cleanup test, Playwright animation, animation debug,
   animation markers, memory leak animation, animation screenshot, visual QA animation,
   animation verification, pre-launch animation check.

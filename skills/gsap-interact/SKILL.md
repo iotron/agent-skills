@@ -1,7 +1,7 @@
 ---
 name: gsap-interact
 description: >
-  Production recipes for mouse-driven interactive GSAP animations in Vue 3 / Nuxt 3.
+  Production recipes for mouse-driven interactive GSAP animations.
   Companion to official gsap-core and gsap-performance skills (API reference).
   Triggers: GSAP mouse, mousemove animation, tilt card, 3D tilt, quickTo, quickSetter,
   hover animation, interactive GSAP, parallax hover, drag interaction, Draggable, liveSnap,
