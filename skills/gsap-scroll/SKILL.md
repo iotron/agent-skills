@@ -121,6 +121,10 @@ See `references/scroll-patterns.md` for:
 - **Velocity Skew** — skewY transforms driven by ScrollTrigger.getVelocity() + gsap.quickSetter
 - **Infinite Looped Panels** — pinSpacing: false stacking with seamless scroll boundary looping
 - **Directionally Aware Header** — show/hide fixed header based on scroll direction
+- **Pinned Panels with Overscroll** — slide-based pinning with fake-scroll for tall panels + scale/fade exit
+- **Image Mask On Scroll** — before/after image reveal using counter-translating containers
+- **Lateral Pin Indicator** — pinned section with side nav indicator + crossfading slide content
+- **Horizontal Scrolling Gallery** — horizontal scroll via pin + scrub with xPercent translation
 
 ---
 

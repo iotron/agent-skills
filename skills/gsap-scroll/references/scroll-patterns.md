@@ -390,3 +390,397 @@ ScrollTrigger.create({
 - `play()` / `reverse()` — smooth toggle without creating new tweens each frame
 - `end: "max"` — ScrollTrigger stays active for entire page scroll
 - No `trigger` element needed — uses the whole page as the scroll context
+
+---
+
+## Pinned Panels with Overscroll
+
+Slide-based pinning where panels pin and unpin cleanly, with overscroll handling for panels taller than the viewport. Fake-scrolls inner content before scaling/fading out.
+
+**Source**: [Gist 4ba7a53](https://gist.github.com/4ba7a53cace6e1a679a6c9a4bf41018d)
+
+```html
+<div class="slides-wrapper">
+  <section class="section section-1">
+    <div class="section-content">
+      <div class="section-inner">
+        <h1>Section 1</h1>
+        <img class="image" src="image.jpg" alt="" />
+      </div>
+    </div>
+  </section>
+  <section class="section section-2">
+    <div class="section-content">
+      <div class="section-inner">
+        <h1>Section 2</h1>
+        <p>Long scrollable content inside a pinned panel...</p>
+      </div>
+    </div>
+  </section>
+  <!-- more sections... -->
+</div>
+```
+
+```css
+.section {
+  width: 100%;
+  height: calc(100vh - 64px);
+  display: flex;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.section-inner {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* For overscroll panels — height: auto + bottom padding */
+.section-2 .section-inner {
+  height: auto;
+  padding-bottom: 20vh;
+}
+```
+
+```js
+gsap.registerPlugin(ScrollTrigger);
+
+var panels = gsap.utils.toArray(".section");
+panels.pop(); // last panel doesn't need exit animation
+
+panels.forEach((panel, i) => {
+  let innerpanel = panel.querySelector(".section-inner");
+  let panelHeight = innerpanel.offsetHeight;
+  let windowHeight = window.innerHeight;
+  let difference = panelHeight - windowHeight;
+
+  // Ratio of animation dedicated to fake-scrolling (for overscroll panels)
+  let fakeScrollRatio = difference > 0 ? (difference / (difference + windowHeight)) : 0;
+
+  // Add margin to compensate for fake-scroll duration
+  if (fakeScrollRatio) {
+    panel.style.marginBottom = panelHeight * fakeScrollRatio + "px";
+  }
+
+  let tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: panel,
+      start: "bottom bottom",
+      end: () => fakeScrollRatio ? `+=${innerpanel.offsetHeight}` : "bottom top",
+      pinSpacing: false,
+      pin: true,
+      scrub: true
+    }
+  });
+
+  // Phase 1: fake scroll inner content (only for overscroll panels)
+  if (fakeScrollRatio) {
+    tl.to(innerpanel, {
+      yPercent: -100, y: window.innerHeight,
+      duration: 1 / (1 - fakeScrollRatio) - 1, ease: "none"
+    });
+  }
+  // Phase 2: scale down + fade out
+  tl.fromTo(panel, { scale: 1, opacity: 1 }, { scale: 0.7, opacity: 0.5, duration: 0.9 })
+    .to(panel, { opacity: 0, duration: 0.1 });
+});
+```
+
+**Key patterns**:
+- `fakeScrollRatio` — calculates how much of the animation is inner-content scrolling vs exit
+- `pinSpacing: false` — panels overlap, creating a slide-over-slide effect
+- `marginBottom` compensation — ensures next panel arrives at the right time
+- Two-phase exit: scale down to 0.7 (90% of exit), then fade to 0 (last 10%)
+- `panels.pop()` — last panel doesn't need an exit animation
+
+---
+
+## Image Mask On Scroll
+
+Before/after image comparison revealed on scroll using counter-translating containers. The outer container slides in while the inner image slides the opposite direction, creating a wipe/mask effect.
+
+**Source**: [Gist 6fefd07](https://gist.github.com/6fefd07444b22399f12ad4237eabddbc)
+
+```html
+<section class="comparisonSection">
+  <div class="comparisonImage beforeImage">
+    <img src="before.jpg" alt="before">
+  </div>
+  <div class="comparisonImage afterImage">
+    <img src="after.jpg" alt="after">
+  </div>
+</section>
+```
+
+```css
+.comparisonSection {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio — responsive */
+}
+.comparisonImage {
+  width: 100%;
+  height: 100%;
+}
+.afterImage {
+  position: absolute;
+  overflow: hidden;
+  top: 0;
+  transform: translate(100%, 0px);
+}
+.afterImage img {
+  transform: translate(-100%, 0px);
+}
+.comparisonImage img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+```
+
+```js
+gsap.utils.toArray(".comparisonSection").forEach(section => {
+  let tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: section,
+      start: "center center",
+      // Match scroll distance to section width — keeps reveal speed constant
+      end: () => "+=" + section.offsetWidth,
+      scrub: true,
+      pin: true,
+      anticipatePin: 1
+    },
+    defaults: { ease: "none" }
+  });
+  // Animate container one way...
+  tl.fromTo(section.querySelector(".afterImage"),
+    { xPercent: 100, x: 0 }, { xPercent: 0 })
+    // ...and image the opposite way (simultaneously)
+    .fromTo(section.querySelector(".afterImage img"),
+      { xPercent: -100, x: 0 }, { xPercent: 0 }, 0);
+});
+```
+
+**Key patterns**:
+- Counter-translation trick — container moves right-to-left, image inside moves left-to-right, creating a mask/wipe
+- `end: () => "+=" + section.offsetWidth` — scroll distance matches width for constant-speed reveal
+- `anticipatePin: 1` — prevents visual jump when pin starts
+- `padding-bottom: 56.25%` — maintains 16:9 responsive aspect ratio without fixed height
+- Works for any number of comparison sections (uses `toArray` + `forEach`)
+
+---
+
+## Lateral Pin Indicator
+
+Pinned section with a side navigation indicator that highlights the current item and crossfades slide content as you scroll through list items.
+
+**Source**: [Gist 699eed9](https://gist.github.com/699eed93235106234be0e65f17746c30)
+
+```html
+<section class="section pin-section">
+  <div class="content">
+    <ul class="list">
+      <li>Animate</li>
+      <li>Anything</li>
+      <li>With</li>
+      <li>GSAP</li>
+    </ul>
+    <div class="fill"></div>
+    <div class="right">
+      <div class="slide center"><img src="slide-1.png" alt="" /></div>
+      <div class="slide center"><img src="slide-2.png" alt="" /></div>
+      <div class="slide center"><img src="slide-3.png" alt="" /></div>
+      <div class="slide center"><img src="slide-4.png" alt="" /></div>
+    </div>
+  </div>
+</section>
+```
+
+```css
+.content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  padding: 0 10px;
+  position: relative;
+}
+.content ul {
+  font-size: 30px;
+  margin: 0;
+  padding: 0;
+  padding-right: 10px;
+  list-style: none;
+  flex-grow: 0;
+}
+.content .fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background-color: var(--color-shockingly-green);
+}
+.content .right {
+  flex-grow: 1;
+  position: relative;
+}
+.right .slide {
+  position: absolute;
+  width: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 1rem;
+  opacity: 0;
+  visibility: hidden;
+}
+```
+
+```js
+gsap.registerPlugin(ScrollTrigger);
+
+const list = document.querySelector(".list");
+const fill = document.querySelector(".fill");
+const listItems = gsap.utils.toArray("li", list);
+const slides = gsap.utils.toArray(".slide");
+
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: ".pin-section",
+    start: "top top",
+    end: "+=" + listItems.length * 50 + "%",
+    pin: true,
+    scrub: true
+  }
+});
+
+// Scale fill bar to 1/N initially (first item visible)
+fill && gsap.set(fill, { scaleY: 1 / listItems.length, transformOrigin: "top left" });
+
+listItems.forEach((item, i) => {
+  const previousItem = listItems[i - 1];
+  if (previousItem) {
+    tl.set(item, { color: "#0ae448" }, 0.5 * i)                    // highlight current
+      .to(slides[i], { autoAlpha: 1, duration: 0.2 }, "<")         // show current slide
+      .set(previousItem, { color: "#fffce1" }, "<")                 // unhighlight previous
+      .to(slides[i - 1], { autoAlpha: 0, duration: 0.2 }, "<");    // hide previous slide
+  } else {
+    gsap.set(item, { color: "#0ae448" });
+    gsap.set(slides[i], { autoAlpha: 1 });
+  }
+});
+
+// Fill bar grows across full timeline duration
+tl.to(fill, {
+  scaleY: 1, transformOrigin: "top left", ease: "none", duration: tl.duration()
+}, 0)
+  .to({}, {}); // small pause at end before unpin
+```
+
+**Key patterns**:
+- `end: "+=" + listItems.length * 50 + "%"` — scroll distance scales with number of items
+- `autoAlpha` crossfade — previous slide fades out as next fades in at the same position (`"<"`)
+- `scaleY` fill bar — grows from `1/N` to `1` across the full timeline, acting as progress indicator
+- `.set()` for color changes — instant state switch (no tween duration)
+- `.to({}, {})` at end — adds a brief hold before the section unpins
+
+---
+
+## Horizontal Scrolling Gallery
+
+Horizontal scroll gallery using ScrollTrigger pin + scrub. Pins a section and translates a strip of images horizontally as the user scrolls vertically. Includes ScrollSmoother integration.
+
+**Source**: [Gist 9ac9e14](https://gist.github.com/9ac9e14a23b0ff5e2be5367b00777af4)
+
+```html
+<div id="smooth-wrapper">
+  <div id="smooth-content">
+    <section id="portfolio">
+      <div class="container-fluid">
+        <div class="horiz-gallery-wrapper">
+          <div class="horiz-gallery-strip">
+            <div class="project-wrap"><img src="image-1.jpg" alt="" /></div>
+            <div class="project-wrap"><img src="image-2.jpg" alt="" /></div>
+            <div class="project-wrap"><img src="image-3.jpg" alt="" /></div>
+            <!-- more items... -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+```
+
+```css
+.horiz-gallery-strip,
+.horiz-gallery-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  will-change: transform;
+  position: relative;
+}
+.project-wrap {
+  width: 33vw;
+  padding: 2rem;
+  box-sizing: content-box;
+}
+.project-wrap img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+}
+```
+
+```js
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+const smoother = ScrollSmoother.create({
+  wrapper: "#smooth-wrapper",
+  content: "#smooth-content",
+  smooth: 2,
+  normalizeScroll: true,
+  ignoreMobileResize: true,
+  preventDefault: true
+});
+
+const horizontalSections = gsap.utils.toArray(".horiz-gallery-wrapper");
+
+horizontalSections.forEach(function (sec) {
+  const pinWrap = sec.querySelector(".horiz-gallery-strip");
+  let pinWrapWidth, horizontalScrollLength;
+
+  function refresh() {
+    pinWrapWidth = pinWrap.scrollWidth;
+    horizontalScrollLength = pinWrapWidth - window.innerWidth;
+  }
+  refresh();
+
+  gsap.to(pinWrap, {
+    scrollTrigger: {
+      scrub: true,
+      trigger: sec,
+      pin: sec,
+      start: "center center",
+      end: () => `+=${pinWrapWidth}`,
+      invalidateOnRefresh: true
+    },
+    x: () => -horizontalScrollLength,
+    ease: "none"
+  });
+
+  ScrollTrigger.addEventListener("refreshInit", refresh);
+});
+```
+
+**Key patterns**:
+- `x: () => -horizontalScrollLength` — functional value recalculates on refresh for responsiveness
+- `end: () => "+=" + pinWrapWidth` — scroll distance matches total strip width for natural speed
+- `ScrollTrigger.addEventListener("refreshInit", refresh)` — recalculates dimensions before ST recalculates positions
+- `invalidateOnRefresh: true` — forces tween to re-evaluate functional values on resize
+- `start: "center center"` — pins when section is centered in viewport
+- ScrollSmoother optional — pattern works without it (remove wrapper/content and ScrollSmoother.create)
+- `will-change: transform` on strip — pre-promotes to GPU layer for smooth horizontal translation
