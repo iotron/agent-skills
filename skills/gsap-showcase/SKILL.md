@@ -77,13 +77,18 @@ Each reference file in `references/<category>/` contains:
 | Scrubbed Vertical Rolodex | `scroll-experiences` | ScrollTrigger | [scrubbed-rolodex](references/scroll-experiences/scrubbed-rolodex.md) |
 | Free For All (Flagship) | `interactive-scenes` | SplitText, Physics2D, MotionPath, DrawSVG, CustomBounce, CustomWiggle | [free-for-all](references/interactive-scenes/free-for-all.md) |
 | Complex SVG Timeline | `interactive-scenes` | Timeline labels, SVG attr, GSDevTools | [complex-svg-timeline](references/interactive-scenes/complex-svg-timeline.md) |
+| Scrubbed Bento Gallery | `scroll-experiences` | ScrollTrigger, Flip | [scrubbed-bento-gallery](references/scroll-experiences/scrubbed-bento-gallery.md) |
+| Card Stack | `scroll-experiences` | Flip | [card-stack](references/scroll-experiences/card-stack.md) |
+| Curve Swipe | `scroll-experiences` | MorphSVG | [curve-swipe](references/scroll-experiences/curve-swipe.md) |
+| Image Sequence | `scroll-experiences` | ScrollTrigger | [image-sequence](references/scroll-experiences/image-sequence.md) |
+| Infinite Card Slider | `scroll-experiences` | ScrollTrigger, Draggable | [infinite-card-slider](references/scroll-experiences/infinite-card-slider.md) |
 
 ---
 
 ## Category References
 
 - [`references/hero-sections/`](references/hero-sections/) — Above-fold hero compositions (2 showcases)
-- [`references/scroll-experiences/`](references/scroll-experiences/) — Immersive scroll scenes (1 showcase)
+- [`references/scroll-experiences/`](references/scroll-experiences/) — Immersive scroll scenes (6 showcases)
 - [`references/interactive-scenes/`](references/interactive-scenes/) — Multi-plugin interactive compositions (2 showcases)
 - [`references/page-transitions/`](references/page-transitions/) — Full-page transitions *(planned)*
 - [`references/loading-sequences/`](references/loading-sequences/) — Premium loading animations *(planned)*
