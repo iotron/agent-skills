@@ -16,6 +16,8 @@ description: >
 
 > **Flow**: gsap-setup → gsap-animate → **gsap-interact** → gsap-optimise → gsap-test
 
+> **Companion**: For GSAP core tween API, invoke **gsap-core**. For performance methods, invoke **gsap-performance**. This skill covers interaction recipes only. Requires: `greensock/gsap-skills`
+
 All patterns assume `gsap.context()` cleanup is in place (see gsap-animate skill).
 
 ---

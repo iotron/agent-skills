@@ -15,6 +15,8 @@ description: >
 
 > **Flow**: gsap-setup → **gsap-animate** → gsap-optimise → gsap-test
 
+> **Companion**: For framework lifecycle/cleanup, invoke **gsap-frameworks**. For timeline API, invoke **gsap-timeline**. This skill covers animation orchestration recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## Sub-Skill Dispatch

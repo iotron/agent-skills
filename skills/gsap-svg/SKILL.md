@@ -15,6 +15,8 @@ description: >
 
 > **Flow**: gsap-setup → gsap-animate → **gsap-svg** → gsap-optimise → gsap-test
 
+> **Companion**: For DrawSVG/MorphSVG API reference, invoke **gsap-plugins**. This skill covers SVG animation recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. SVG Path Drawing (strokeDashoffset)

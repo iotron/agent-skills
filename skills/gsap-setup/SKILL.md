@@ -17,6 +17,8 @@ description: >
 > **Flow**: **gsap-setup** → gsap-animate → gsap-optimise → gsap-test
 > Detect the framework from project files (nuxt.config, next.config, package.json) and use the matching section below.
 
+> **Companion**: For GSAP core API and defaults, invoke **gsap-core**. For framework lifecycle/cleanup, invoke **gsap-frameworks**. This skill covers setup recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. Installation

@@ -17,6 +17,8 @@ description: >
 > **Flow**: gsap-setup → gsap-animate → **gsap-text** → gsap-optimise → gsap-test
 > **Key files**: `composables/useReveal.js`, `plugins/gsap.js`, `assets/css/tailwind.css`
 
+> **Companion**: For SplitText/ScrambleText API reference, invoke **gsap-plugins**. This skill covers text animation recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. SplitText Setup

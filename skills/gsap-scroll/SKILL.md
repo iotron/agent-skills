@@ -17,6 +17,8 @@ description: >
 > **Flow**: gsap-setup → gsap-animate → **gsap-scroll** → gsap-optimise → gsap-test
 > Cross-reference gsap-animate for context/cleanup, gsap-optimise for batch/scrub tuning.
 
+> **Companion**: For ScrollTrigger API reference, invoke **gsap-scrolltrigger**. This skill covers scroll animation recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. Basic Scroll Reveal

@@ -17,6 +17,8 @@ description: >
 > **Flow**: gsap-setup → gsap-animate → **gsap-optimise** → gsap-test
 > **References**: `references/performance-deep-dive.md` for extended API details.
 
+> **Companion**: For general GSAP performance guidance, invoke **gsap-performance**. This skill covers optimisation recipes and audit checklists only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. GPU Acceleration

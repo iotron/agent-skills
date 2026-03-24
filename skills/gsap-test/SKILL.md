@@ -16,6 +16,8 @@ description: >
 
 > **Flow**: gsap-setup → gsap-animate → gsap-optimise → **gsap-test**
 
+> **Companion**: This skill covers testing and debugging recipes. No API overlap — unique to this plugin.
+
 ---
 
 ## 1. Vitest — Animation Cleanup

@@ -16,6 +16,8 @@ description: >
 
 > **Flow**: gsap-setup → gsap-animate → **gsap-vfx** → gsap-optimise → gsap-test
 
+> **Companion**: For core tween/timeline API, invoke **gsap-core** and **gsap-timeline**. This skill covers visual effects recipes only. Requires: `greensock/gsap-skills`
+
 ---
 
 ## 1. Glitch Effect
