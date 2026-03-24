@@ -1,4 +1,4 @@
-# iotron Agent Skills
+# iotron GSAP Cookbook
 
 [![GitHub stars](https://img.shields.io/github/stars/iotron/agent-skills?style=social)](https://github.com/iotron/agent-skills)
 
@@ -66,31 +66,31 @@ Install the official GSAP skills first — this plugin provides production recip
 
 ```bash
 /plugin marketplace add iotron/agent-skills
-/plugin install iotron-agent-skills
+/plugin install iotron-gsap-cookbook
 /reload-plugins
 ```
 
 Skills auto-trigger based on context, or invoke directly:
 
 ```
-/iotron-agent-skills:gsap-animate
-/iotron-agent-skills:gsap-scroll
-/iotron-agent-skills:gsap-interact
-/iotron-agent-skills:gsap-text
-/iotron-agent-skills:gsap-svg
-/iotron-agent-skills:gsap-vfx
-/iotron-agent-skills:gsap-optimise
-/iotron-agent-skills:gsap-test
-/iotron-agent-skills:gsap-setup
-/iotron-agent-skills:gsap-cursor
-/iotron-agent-skills:gsap-canvas
-/iotron-agent-skills:gsap-showcase
+/iotron-gsap-cookbook:gsap-animate
+/iotron-gsap-cookbook:gsap-scroll
+/iotron-gsap-cookbook:gsap-interact
+/iotron-gsap-cookbook:gsap-text
+/iotron-gsap-cookbook:gsap-svg
+/iotron-gsap-cookbook:gsap-vfx
+/iotron-gsap-cookbook:gsap-optimise
+/iotron-gsap-cookbook:gsap-test
+/iotron-gsap-cookbook:gsap-setup
+/iotron-gsap-cookbook:gsap-cursor
+/iotron-gsap-cookbook:gsap-canvas
+/iotron-gsap-cookbook:gsap-showcase
 ```
 
 ## Updating
 
 ```bash
-/plugin marketplace update iotron-agent-skills
+/plugin marketplace update iotron-gsap-cookbook
 /reload-plugins
 ```
 

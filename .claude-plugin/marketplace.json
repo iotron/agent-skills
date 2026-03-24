@@ -1,5 +1,5 @@
 {
-  "name": "iotron-agent-skills",
+  "name": "iotron-gsap-cookbook",
   "owner": {
     "name": "iotron",
     "email": "hello@iotron.co"
@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "iotron-agent-skills",
+      "name": "iotron-gsap-cookbook",
       "description": "12 GSAP skills covering the full animation workflow: setup, animate, scroll, interact, cursor, text, SVG, VFX, canvas, showcase, optimise, and test",
       "source": "./"
     }

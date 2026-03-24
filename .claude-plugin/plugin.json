@@ -1,5 +1,5 @@
 {
-  "name": "iotron-agent-skills",
+  "name": "iotron-gsap-cookbook",
   "version": "1.0.0",
   "description": "12 GSAP animation skills covering the full workflow: setup, animate, scroll, interact, cursor, text, SVG, VFX, canvas, showcase, optimise, and test — for Vue 3 / Nuxt 3 and React",
   "author": {
