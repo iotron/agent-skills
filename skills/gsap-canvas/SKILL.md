@@ -4,8 +4,9 @@ description: >
   Production recipes for GSAP animations rendered to HTML5 Canvas.
   Companion to official gsap-core and gsap-timeline skills (API reference).
   Triggers: canvas animation, GSAP canvas, particle system, canvas particles, canvas rendering,
-  onUpdate canvas, draw loop, sprite animation, canvas timeline, canvas GSAP.
-  Non-triggers: Not for DOM-based animation (use gsap-animate), not for SVG (use gsap-svg),
+  onUpdate canvas, draw loop, sprite animation, canvas timeline, canvas GSAP, canvas morph,
+  MorphSVG canvas, shape morphing canvas.
+  Non-triggers: Not for DOM-based animation (use gsap-animate), not for SVG DOM morphing (use gsap-svg),
   not for WebGL/Three.js.
   Outcome: Produces canvas-based animations using GSAP timelines with custom onUpdate
   rendering pipelines, particle systems, and resize handling.
@@ -151,4 +152,4 @@ window.addEventListener('resize', () => {
 
 ## References
 
-- `references/canvas-patterns.md` — Full particle orbit system implementation with annotations
+- `references/canvas-patterns.md` — Full implementations: particle orbit system, canvas morphs (MorphSVG rendered to canvas)
