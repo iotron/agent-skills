@@ -115,7 +115,7 @@ gsap.to(el, {
 See `references/learnings.md` for full details and code examples.
 
 - Await `document.fonts.ready` before `SplitText.create()`
-- Use `autoSplit: true` only with `onSplit()` callback
+- `autoSplit: true` is for **lines** only (responsive reflow) — words/chars don't need it. Always pair with `onSplit()`
 - Parent autoAlpha + child mask: use `visibility`, not `autoAlpha`
 - Never blank `textContent` before scramble
 - Set `overwrite: false` on colocated per-word tweens

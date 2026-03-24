@@ -3,7 +3,7 @@
 Hard-won lessons from real production debugging. Read before implementing any text animation.
 
 ## Table of Contents
-- [autoSplit: true — use ONLY with onSplit()](#autosplit-true--use-only-with-onsplit)
+- [autoSplit: true — for responsive LINE splitting only](#autosplit-true--for-responsive-line-splitting-only)
 - [Await document.fonts.ready BEFORE SplitText](#await-documentfontsready-before-splittext)
 - [Parent autoAlpha + child mask conflict](#parent-autoalpha--child-mask-conflict)
 - [Never blank textContent before scramble](#never-blank-textcontent-before-scramble)
@@ -13,16 +13,16 @@ Hard-won lessons from real production debugging. Read before implementing any te
 
 ---
 
-## autoSplit: true — use ONLY with onSplit()
+## autoSplit: true — for responsive LINE splitting only
 
-`autoSplit: true` attaches a ResizeObserver that re-splits the DOM on resize. If you create animations **outside** `onSplit()`, element references go stale after re-split.
+`autoSplit: true` attaches a ResizeObserver that re-splits when fonts finish loading or when the **element width changes AND lines are split**. It exists because line-wrapped `<div>` elements become stale when text reflows to different lines on resize.
+
+**When to use `autoSplit`:** Only when splitting `type: "lines"` (or a combination that includes lines). Words and characters reflow naturally without re-splitting — they're individual elements regardless of which line they land on.
+
+**When using `autoSplit`:** Always create animations inside `onSplit()` and return the tween/timeline so SplitText can clean up and sync progress on re-split.
 
 ```js
-// BAD — animations outside onSplit, references go stale on resize
-const s = SplitText.create(el, { type: 'words', autoSplit: true })
-gsap.to(s.words, { y: 0 }) // these elements may be destroyed on resize
-
-// GOOD — official pattern: animations inside onSplit(), returned for auto-cleanup
+// BAD — autoSplit with words-only (unnecessary, words reflow naturally)
 SplitText.create(el, {
   type: 'words', mask: 'words', autoSplit: true,
   onSplit(self) {
@@ -30,10 +30,18 @@ SplitText.create(el, {
   },
 })
 
-// ALSO GOOD — one-time split after fonts.ready, stable references
+// GOOD — autoSplit with lines (lines need re-splitting on resize)
+SplitText.create(el, {
+  type: 'lines, words', mask: 'lines', autoSplit: true,
+  onSplit(self) {
+    return gsap.from(self.words, { y: 100, autoAlpha: 0, duration: 1, stagger: 0.05 })
+  },
+})
+
+// GOOD — words-only split after fonts.ready (no autoSplit needed)
 await document.fonts.ready
-const s = SplitText.create(el, { type: 'words' })
-gsap.to(s.words, { y: 0 })
+const s = SplitText.create(el, { type: 'words', mask: 'words' })
+gsap.from(s.words, { y: '100%', duration: 0.8, stagger: 0.06 })
 ```
 
 ---
