@@ -5,6 +5,8 @@
 - [Spring Physics (Elastic Cursor Followers)](#spring-physics-elastic-cursor-followers)
 - [Spotlight Cursor (Clip-Path Circle)](#spotlight-cursor-clip-path-circle)
 - [Circuit Glow (CSS Custom Properties)](#circuit-glow-css-custom-properties)
+- [Cursor-Tracking Image Preview](#cursor-tracking-image-preview)
+- [Cursor-Driven Perspective Tilt](#cursor-driven-perspective-tilt)
 
 ---
 
@@ -275,3 +277,173 @@ div:hover .circuit-glow {
 ```
 
 **Key rules**: real `<div>` (not `::after`) | stores **unitless ratios** (0-1), CSS uses `calc(var * 100%)` | opacity is CSS-transition-based, no GSAP | direct `style.setProperty` for maximum speed
+
+---
+
+## Cursor-Tracking Image Preview
+
+Source: [CodePen by GSAP](https://codepen.io/GreenSock/pen/PwqrzeG)
+
+Images follow the cursor when hovering over list items. Uses `gsap.quickTo` for smooth position tracking with instant snap on first enter.
+
+### HTML structure
+
+```html
+<ul role="list">
+  <li class="container">
+    <img class="swipeimage" src="portrait-image.jpg">
+    <div class="text">
+      <h3>Item label text</h3>
+    </div>
+  </li>
+  <!-- Repeat for each item -->
+</ul>
+```
+
+### CSS — fixed-position image at cursor
+
+```css
+.container img.swipeimage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 350px;
+  height: 350px;
+  object-fit: cover;
+  transform: translateX(-50%) translateY(-50%);
+  z-index: 9;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+```
+
+### Core logic — quickTo with first-enter snap
+
+```js
+// Center the image origin at its midpoint
+gsap.set(".container img.swipeimage", { yPercent: -50, xPercent: -50 });
+
+let firstEnter;
+
+gsap.utils.toArray(".container").forEach((el) => {
+  const image = el.querySelector("img.swipeimage"),
+    // Pre-compile quickTo tweens — much faster than gsap.to on every mousemove
+    setX = gsap.quickTo(image, "x", { duration: 0.4, ease: "power3" }),
+    setY = gsap.quickTo(image, "y", { duration: 0.4, ease: "power3" }),
+    align = (e) => {
+      if (firstEnter) {
+        // On first enter, snap immediately (pass start = end to skip interpolation)
+        // See: https://gsap.com/docs/v3/GSAP/gsap.quickTo()/#optionally-define-a-start-value
+        setX(e.clientX, e.clientX);
+        setY(e.clientY, e.clientY);
+        firstEnter = false;
+      } else {
+        setX(e.clientX);
+        setY(e.clientY);
+      }
+    },
+    startFollow = () => document.addEventListener("mousemove", align),
+    stopFollow = () => document.removeEventListener("mousemove", align),
+    // Fade tween — paused, played/reversed on enter/leave
+    fade = gsap.to(image, {
+      autoAlpha: 1,          // opacity + visibility in one property
+      ease: "none",
+      paused: true,
+      duration: 0.1,
+      onReverseComplete: stopFollow  // Only remove listener after fade-out completes
+    });
+
+  el.addEventListener("mouseenter", (e) => {
+    firstEnter = true;
+    fade.play();
+    startFollow();
+    align(e);               // Immediately position on enter (no lag)
+  });
+
+  el.addEventListener("mouseleave", () => fade.reverse());
+});
+```
+
+**Key patterns**: `gsap.quickTo` pre-compiles position tweens for 60fps tracking | `quickTo(value, startValue)` two-arg form snaps instantly on first enter (no interpolation lag) | `autoAlpha` handles both opacity and visibility | paused tween with `play()`/`reverse()` for enter/leave toggling | `onReverseComplete` defers listener removal until fade-out finishes | `gsap.set` with `yPercent: -50, xPercent: -50` centers image at cursor
+
+---
+
+## Cursor-Driven Perspective Tilt
+
+Source: [CodePen by GSAP](https://codepen.io/GreenSock/pen/qBzaNQy)
+
+Official GSAP 3D perspective tilt — an element tilts based on pointer position using `gsap.quickTo` for rotationX, rotationY, x, y. Resets smoothly on pointer leave.
+
+### HTML structure
+
+```html
+<main>
+  <div class="logo-outer">
+    <!-- Any content: SVG, image, card, etc. -->
+    <svg class="logo" viewBox="0 0 623 231">...</svg>
+  </div>
+</main>
+```
+
+### CSS — perspective container
+
+```css
+main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+}
+
+.logo-outer {
+  width: 50%;
+  height: 50%;
+  border-radius: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+svg.logo {
+  width: 66%;
+  max-height: 66%;
+}
+```
+
+### Core logic — quickTo for rotation + translation
+
+```js
+const main = document.querySelector("main");
+
+// Set perspective on the parent — required for 3D transforms on children
+gsap.set("main", { perspective: 650 });
+
+// Pre-compile 4 quickTo instances: outer container rotates, inner element translates
+const outerRX = gsap.quickTo(".logo-outer", "rotationX", { ease: "power3" });
+const outerRY = gsap.quickTo(".logo-outer", "rotationY", { ease: "power3" });
+const innerX = gsap.quickTo(".logo", "x", { ease: "power3" });
+const innerY = gsap.quickTo(".logo", "y", { ease: "power3" });
+
+main.addEventListener("pointermove", (e) => {
+  // Map pointer position to rotation/translation ranges using gsap.utils.interpolate
+  // Vertical pointer position → rotationX (15 at top, -15 at bottom)
+  outerRX(gsap.utils.interpolate(15, -15, e.y / window.innerHeight));
+  // Horizontal pointer position → rotationY (-15 at left, 15 at right)
+  outerRY(gsap.utils.interpolate(-15, 15, e.x / window.innerWidth));
+  // Inner element shifts slightly for parallax depth effect
+  innerX(gsap.utils.interpolate(-30, 30, e.x / window.innerWidth));
+  innerY(gsap.utils.interpolate(-30, 30, e.y / window.innerHeight));
+});
+
+// Reset all transforms smoothly on pointer leave
+main.addEventListener("pointerleave", (e) => {
+  outerRX(0);
+  outerRY(0);
+  innerX(0);
+  innerY(0);
+});
+```
+
+**Key patterns**: `gsap.set(parent, { perspective: 650 })` enables 3D space for children | `gsap.quickTo` pre-compiles 4 independent tweens (rotation + translation) | `gsap.utils.interpolate(min, max, progress)` maps normalized pointer position (0-1) to value ranges | outer container rotates (rotationX/Y) while inner element translates (x/y) for parallax depth | `pointerleave` resets all quickTo instances to 0 for smooth return | uses `pointermove`/`pointerleave` (not mouse events) for touch+mouse compatibility

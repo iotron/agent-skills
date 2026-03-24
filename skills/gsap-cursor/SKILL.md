@@ -5,7 +5,7 @@ description: >
   Companion to official gsap-core and gsap-performance skills (API reference).
   Triggers: cursor follower, cursor effect, mouse follower, magnetic button, spotlight cursor,
   cursor trail, particle trail, spring cursor, elastic cursor, pointer animation, custom cursor,
-  cursor glow, clipPath cursor, quickTo cursor.
+  cursor glow, clipPath cursor, quickTo cursor, image preview hover, perspective tilt, 3D tilt cursor.
   Non-triggers: Not for hover/tilt card effects (use gsap-interact), not for scroll
   animations (use gsap-scroll), not for general mouse events without cursor effects.
   Outcome: Produces cursor-driven animation effects with proper cleanup, overwrite management,
@@ -105,7 +105,40 @@ Initial state: `gsap.set(spotlight, { clipPath: 'circle(0px at 50% 50%)' })` for
 
 ---
 
-## 5. Best Practices
+## 5. Cursor-Tracking Image Preview
+
+Images follow the cursor when hovering over list items. Uses `gsap.quickTo` with a two-arg snap on first enter to avoid interpolation lag.
+
+```js
+const setX = gsap.quickTo(image, "x", { duration: 0.4, ease: "power3" })
+// On first enter, snap: setX(e.clientX, e.clientX)
+// On subsequent moves: setX(e.clientX)
+```
+
+Paused `autoAlpha` tween toggles visibility via `play()`/`reverse()` on mouseenter/mouseleave.
+
+> Full implementation in `references/cursor-patterns.md`.
+
+---
+
+## 6. Cursor-Driven Perspective Tilt
+
+3D perspective tilt driven by pointer position. Parent gets `perspective: 650`, children rotate/translate via `gsap.quickTo` + `gsap.utils.interpolate`.
+
+```js
+gsap.set("main", { perspective: 650 })
+const outerRX = gsap.quickTo(".card", "rotationX", { ease: "power3" })
+// pointermove: outerRX(gsap.utils.interpolate(15, -15, e.y / innerHeight))
+// pointerleave: outerRX(0)
+```
+
+Outer element rotates (rotationX/Y), inner element translates (x/y) for parallax depth.
+
+> Full implementation in `references/cursor-patterns.md`.
+
+---
+
+## 7. Best Practices
 
 ```js
 // 1. overwrite: 'auto' on EVERY rapid-fire tween — prevents pile-up
@@ -136,4 +169,4 @@ gsap.set(el, { force3D: true })
 
 ## References
 
-- `references/cursor-patterns.md` — Flair particle trail, spring physics followers, spotlight cursor, circuit glow with CSS custom properties
+- `references/cursor-patterns.md` — Flair particle trail, spring physics followers, spotlight cursor, circuit glow, cursor-tracking image preview, cursor-driven perspective tilt
