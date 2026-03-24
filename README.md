@@ -1,10 +1,10 @@
 # iotron GSAP Cookbook
 
-[![GitHub stars](https://img.shields.io/github/stars/iotron/agent-skills?style=social)](https://github.com/iotron/agent-skills)
+[![GitHub stars](https://img.shields.io/github/stars/iotron/gsap-cookbook?style=social)](https://github.com/iotron/gsap-cookbook)
 
 Reusable Claude Code skills for premium GSAP animations — production recipes for any framework.
 
-> If these skills save you time, [star the repo](https://github.com/iotron/agent-skills) — it helps others find it and motivates updates.
+> If these skills save you time, [star the repo](https://github.com/iotron/gsap-cookbook) — it helps others find it and motivates updates.
 
 ## Skills (12)
 
@@ -65,7 +65,7 @@ Install the official GSAP skills first — this plugin provides production recip
 ## Installation
 
 ```bash
-/plugin marketplace add iotron/agent-skills
+/plugin marketplace add iotron/gsap-cookbook
 /plugin install iotron-gsap-cookbook
 /reload-plugins
 ```
@@ -96,7 +96,7 @@ Skills auto-trigger based on context, or invoke directly:
 
 ## Contributing
 
-Found a bug or have a pattern to add? [Open an issue](https://github.com/iotron/agent-skills/issues) or PR.
+Found a bug or have a pattern to add? [Open an issue](https://github.com/iotron/gsap-cookbook/issues) or PR.
 
 ## License
 

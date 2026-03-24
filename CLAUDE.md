@@ -4,9 +4,9 @@
 
 Claude Code plugin providing 12 GSAP animation skills — production recipes for scroll, text, SVG, cursor, canvas, and visual effects in any framework. Published as `iotron-gsap-cookbook` on the Claude Code marketplace.
 
-- **Repository**: `iotron/agent-skills`
+- **Repository**: `iotron/gsap-cookbook`
 - **Plugin name**: `iotron-gsap-cookbook`
-- **Install**: `/plugin marketplace add iotron/agent-skills` → `/plugin install iotron-gsap-cookbook`
+- **Install**: `/plugin marketplace add iotron/gsap-cookbook` → `/plugin install iotron-gsap-cookbook`
 - **Invoke**: `/iotron-gsap-cookbook:<skill-name>` (e.g., `/iotron-gsap-cookbook:gsap-animate`)
 
 ## Architecture

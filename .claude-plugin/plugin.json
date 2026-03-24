@@ -6,7 +6,7 @@
     "name": "iotron",
     "email": "hello@iotron.co"
   },
-  "repository": "https://github.com/iotron/agent-skills",
+  "repository": "https://github.com/iotron/gsap-cookbook",
   "license": "MIT",
   "keywords": ["gsap", "animation", "vue", "nuxt", "react", "scrolltrigger", "splittext", "cursor", "canvas", "showcase"]
 }
