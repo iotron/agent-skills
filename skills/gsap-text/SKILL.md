@@ -148,5 +148,5 @@ Cleanup is automatic — `onUnmounted` reverts gsap.context and all SplitText in
 
 ## References
 
-- `references/text-patterns.md` — Combined clip+scramble, kinetic character split, elastic type assembly
+- `references/text-patterns.md` — Combined clip+scramble, kinetic character split, elastic type assembly, rolling text (3D slot machine), horizontal text (containerAnimation), masked lines reveal, autoSplit with ScrollTrigger
 - `references/learnings.md` — 7 critical gotchas from production debugging
