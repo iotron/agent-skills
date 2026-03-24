@@ -25,10 +25,13 @@ description: >
 | Building this? | Use this sub-skill |
 |---|---|
 | Scroll reveals, parallax, pinned sections, stacking cards | **gsap-scroll** |
-| Tilt cards, cursor followers, spotlight, magnetic buttons | **gsap-interact** |
+| Tilt cards, hover effects, drag interactions | **gsap-interact** |
 | Text reveals (SplitText), scramble decode, kinetic type | **gsap-text** |
 | SVG path drawing, morphing, circuit boards | **gsap-svg** |
 | Glitch effects, marquee, counters, floating elements | **gsap-vfx** |
+| Cursor followers, trails, magnetic, spotlight | **gsap-cursor** |
+| Canvas particle systems, canvas rendering | **gsap-canvas** |
+| Premium section or full-page composition | **gsap-showcase** (reference) + technique skills |
 
 ### Common Layout Combinations
 
@@ -39,6 +42,8 @@ description: >
 | **Circuit board** | gsap-svg + gsap-interact |
 | **Cyber/terminal page** | gsap-text + gsap-vfx + gsap-svg |
 | **Stats section** | gsap-vfx + gsap-scroll |
+| **Premium hero** | gsap-showcase + gsap-text + gsap-scroll + gsap-cursor |
+| **Interactive canvas scene** | gsap-showcase + gsap-canvas + gsap-scroll |
 
 ---
 
