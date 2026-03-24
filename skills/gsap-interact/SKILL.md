@@ -5,7 +5,7 @@ description: >
   Companion to official gsap-core and gsap-performance skills (API reference).
   Triggers: GSAP mouse, mousemove animation, tilt card, 3D tilt, quickTo, quickSetter,
   hover animation, interactive GSAP, parallax hover, drag interaction, Draggable, liveSnap,
-  mouse-driven animation.
+  mouse-driven animation, dock effect, macOS dock, magnification, proximity scale, dock magnify.
   Non-triggers: Not for scroll-driven animation (use gsap-scroll), text effects (use gsap-text),
   SVG drawing (use gsap-svg), visual effects like glitch/marquee (use gsap-vfx),
   or cursor/pointer effects (use gsap-cursor).
@@ -91,4 +91,4 @@ gsap.set(el, { force3D: true })
 
 ## References
 
-- `references/interaction-patterns.md` — Draggable with liveSnap for SVG point editing
+- `references/interaction-patterns.md` — Draggable with liveSnap for SVG point editing, macOS Dock magnification effect

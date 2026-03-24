@@ -86,3 +86,143 @@ function createClone(node, parent, point) {
 - **`inertia: true`** — enables throw/flick physics; `onThrowUpdate` fires each frame during the inertia phase
 - **`onDrag` + `onThrowUpdate`** — both update the SVG polygon point in real time, keeping the shape in sync with handles
 - **SVG `points.getItem(i)`** — returns a live `SVGPoint` reference; mutating `.x`/`.y` immediately updates the rendered polygon
+
+---
+
+## macOS Dock Effect
+
+macOS-style dock magnification on hover — items scale up based on proximity to cursor using cosine-based distance falloff.
+
+> Source: Forked from [Blake Bowen's CodePen](https://codepen.io/osublake/pen/GYzqjL)
+
+### HTML — Dock toolbar
+
+```html
+<div class="wrapper">
+  <ul class="toolbar">
+    <li class="toolbarItem">
+      <a class="toolbarLink" href="#!">
+        <img class="toolbarImg" src="icon-1.png" alt="">
+      </a>
+    </li>
+    <li class="toolbarItem">
+      <a class="toolbarLink" href="#!">
+        <img class="toolbarImg" src="icon-2.png" alt="">
+      </a>
+    </li>
+    <!-- repeat for each dock icon -->
+  </ul>
+</div>
+```
+
+### CSS — Fixed bottom dock
+
+```css
+.wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%);
+  display: flex;
+  justify-content: center;
+}
+
+.toolbar {
+  display: inline-flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 40px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  margin: 0;
+  padding: 10px;
+  background-color: rgba(55, 66, 77, 0.25);
+  list-style: none;
+}
+
+.toolbarItem {
+  width: 40px;
+  height: 40px;
+  margin: 0 4px;
+}
+
+.toolbarLink {
+  display: block;
+  height: 100%;
+}
+
+.toolbarImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+```
+
+### JS — Proximity-based magnification
+
+```js
+let icons = document.querySelectorAll(".toolbarItem");
+let dock = document.querySelector(".toolbar");
+let firstIcon = icons[0];
+
+let min = 48;   // icon width + margin
+let max = 120;  // max scaled size
+let bound = min * Math.PI;
+
+gsap.set(icons, {
+  transformOrigin: "50% 120%",
+  height: 40
+});
+
+gsap.set(dock, {
+  position: "relative",
+  height: 60
+});
+
+dock.addEventListener("mousemove", (event) => {
+  let offset = dock.getBoundingClientRect().left + firstIcon.offsetLeft;
+  updateIcons(event.clientX - offset);
+});
+
+dock.addEventListener("mouseleave", (event) => {
+  gsap.to(icons, {
+    duration: 0.3,
+    scale: 1,
+    x: 0
+  });
+});
+
+function updateIcons(pointer) {
+  for (let i = 0; i < icons.length; i++) {
+    let icon = icons[i];
+    let distance = (i * min + min / 2) - pointer;
+    let x = 0;
+    let scale = 1;
+
+    if (-bound < distance && distance < bound) {
+      let rad = distance / min * 0.5;
+      scale = 1 + (max / min - 1) * Math.cos(rad);
+      x = 2 * (max - min) * Math.sin(rad);
+    } else {
+      x = (-bound < distance ? 2 : -2) * (max - min);
+    }
+
+    gsap.to(icon, {
+      duration: 0.3,
+      x: x,
+      scale: scale
+    });
+  }
+}
+```
+
+### Key patterns
+
+- **Cosine-based scale falloff** — `Math.cos(rad)` produces a smooth bell curve; items nearest the cursor scale most, with graceful falloff to neighbors
+- **Sine-based displacement** — `Math.sin(rad)` pushes neighboring items outward, preventing overlap during magnification
+- **`bound = min * Math.PI`** — defines the influence radius; items beyond this distance remain at base scale
+- **`transformOrigin: "50% 120%"`** — scales icons upward from below their center, mimicking the macOS dock's bottom-anchored growth
+- **`mouseleave` reset** — smoothly animates all icons back to `scale: 1, x: 0` with 0.3s duration
+- **Per-icon `gsap.to`** — each icon gets its own tween for independent smooth animation; GSAP handles overwrite automatically

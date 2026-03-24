@@ -5,7 +5,9 @@ description: >
   Companion to official gsap-plugins skill (API reference).
   Triggers: SVG animation, GSAP SVG, path drawing, strokeDashoffset, DrawSVG, drawSVG, SVG morph,
   MorphSVGPlugin, circuit tree, circuit board, CTAHud, HUD animation, pulse ring, scallop wave,
-  SVG stagger, SVG fill, SVG stroke, SVG cleanup, feGaussianBlur, SVG glow, SVG blink.
+  SVG stagger, SVG fill, SVG stroke, SVG cleanup, feGaussianBlur, SVG glow, SVG blink,
+  shape overlay, page transition, section transition, smooth morph, morph interpolation,
+  dynamic morphing, SVG curtain, shape transition.
   Non-triggers: Not for text animation (use gsap-text), scroll reveals without SVG (use gsap-scroll),
   mouse interactions (use gsap-interact), or non-SVG visual effects (use gsap-vfx).
   Outcome: Produces SVG animations — path drawing, morphing, circuit board patterns, HUD systems,
@@ -121,4 +123,4 @@ onUnmounted(() => {
 
 ## References
 
-- `references/svg-patterns.md` — Circuit Tree triple-layer animation, CTAHud 5-layer system
+- `references/svg-patterns.md` — Circuit Tree triple-layer animation, CTAHud 5-layer system, Dynamic Morphing shape overlays, Smooth Morph with interpolation
