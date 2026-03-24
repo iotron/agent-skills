@@ -70,22 +70,20 @@ Each reference file in `references/<category>/` contains:
 
 ## Available Showcases
 
-> Entries will be added in the next task. Planned showcases:
-
 | Showcase | Category | Plugins | Reference |
 |---|---|---|---|
-| Layered Hero Pinning | `hero-sections` | ScrollTrigger, SplitText | `references/hero-sections/` |
-| 3D Card Carousel | `scroll-experiences` | ScrollTrigger, Observer | `references/scroll-experiences/` |
-| Interactive Particle Scene | `interactive-scenes` | MotionPath, Draggable | `references/interactive-scenes/` |
-| Crossfade Page Transition | `page-transitions` | Flip, ScrollTrigger | *(planned)* |
-| Staged Loading Reveal | `loading-sequences` | SplitText, DrawSVG | *(planned)* |
+| Responsive SplitText Animator | `hero-sections` | SplitText, GSDevTools | [responsive-splittext-animator](references/hero-sections/responsive-splittext-animator.md) |
+| Responsive matchMedia | `hero-sections` | gsap.matchMedia() | [responsive-matchmedia](references/hero-sections/responsive-matchmedia.md) |
+| Scrubbed Vertical Rolodex | `scroll-experiences` | ScrollTrigger | [scrubbed-rolodex](references/scroll-experiences/scrubbed-rolodex.md) |
+| Free For All (Flagship) | `interactive-scenes` | SplitText, Physics2D, MotionPath, DrawSVG, CustomBounce, CustomWiggle | [free-for-all](references/interactive-scenes/free-for-all.md) |
+| Complex SVG Timeline | `interactive-scenes` | Timeline labels, SVG attr, GSDevTools | [complex-svg-timeline](references/interactive-scenes/complex-svg-timeline.md) |
 
 ---
 
 ## Category References
 
-- [`references/hero-sections/`](references/hero-sections/) — Above-fold hero compositions
-- [`references/scroll-experiences/`](references/scroll-experiences/) — Immersive scroll scenes
-- [`references/interactive-scenes/`](references/interactive-scenes/) — Multi-plugin interactive compositions
+- [`references/hero-sections/`](references/hero-sections/) — Above-fold hero compositions (2 showcases)
+- [`references/scroll-experiences/`](references/scroll-experiences/) — Immersive scroll scenes (1 showcase)
+- [`references/interactive-scenes/`](references/interactive-scenes/) — Multi-plugin interactive compositions (2 showcases)
 - [`references/page-transitions/`](references/page-transitions/) — Full-page transitions *(planned)*
 - [`references/loading-sequences/`](references/loading-sequences/) — Premium loading animations *(planned)*
